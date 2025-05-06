@@ -1,0 +1,53 @@
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter and IPython
+.ipynb_checkpoints/
+
+# Virtual environments
+env/
+venv/
+ENV/
+*.env
+
+# Eclipse and PyDev
+.project
+.pydevproject
+.metadata/
+.settings/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Model files and large outputs
+models/
+*.joblib
+*.pkl
+*.h5
+*.log
+
+# Data files (optional — allow if you're sharing small CSVs)
+data/raw/
+data/processed/
+*.csv
+*.xlsx
+
+# Secrets and credentials
+*.json
+*.key
+*.pem
+secrets/
+config.json
+.env
+
+# Visualization images (optional)
+*.png
+*.svg
+*.pdf
+
+# Streamlit auto-generated cache
+.streamlit/
