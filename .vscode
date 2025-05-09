@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run: Preprocessing",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/preprocessing/data_preprocessing.py",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Run: Ensemble Voting",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/pipeline/ensemble_voting.py",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Run: Streamlit App (manual launch)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/streamlit/stroke_risk_app.py",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    }
+  ]
+}
