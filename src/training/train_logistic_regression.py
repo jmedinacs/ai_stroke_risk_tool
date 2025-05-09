@@ -16,9 +16,11 @@ from sklearn.metrics import classification_report, roc_auc_score, precision_scor
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.metrics import precision_recall_curve
 import matplotlib.pyplot as plt 
+import pandas as pd 
 import joblib 
 import os 
 import json
+import shap 
 
 def train_model(X_train, y_train, X_test, y_test):
     """
@@ -101,6 +103,53 @@ def plot_precision_recall_curve(y_test, y_prob):
     plt.savefig("../../outputs/figures/precision_recall_curve.png", dpi=300)
     plt.show()
     print("Precision-recall curve saved to /outputs/figures/")
+    
+def explain_model_with_shap(model, X_test):
+    """
+    Generates SHAP values and plots for Logistic Regression.
+
+    Args:
+        model (LogisticRegression): Trained logistic regression model.
+        X_test (pd.DataFrame): Test features used for SHAP explanations.
+
+    Saves:
+        SHAP summary plot and waterfall plot for one example.
+    """
+    # Force all features to float64
+    X_test_float = X_test.copy()
+    for col in X_test_float.columns:
+        try:
+            X_test_float[col] = pd.to_numeric(X_test_float[col], errors="raise").astype("float64")
+        except Exception as e:
+            print(f"Failed to convert column '{col}': {e}")
+
+    # Initialize SHAP explainer and compute values
+    explainer = shap.Explainer(model, X_test_float)
+    shap_values = explainer(X_test_float)
+
+    # Create directory
+    os.makedirs("../../outputs/figures", exist_ok=True)
+
+    # Summary plot
+    plt.figure()
+    shap.plots.bar(shap_values, show=False)
+    plt.title("SHAP Summary – Logistic Regression")
+    plt.tight_layout()
+    plt.savefig("../../outputs/figures/shap_summary_logreg.png", dpi=300)
+    plt.show()
+    plt.close()
+
+    # Optional: Waterfall plot for one test row
+    plt.figure()
+    shap.plots.waterfall(shap_values[0], show=False)
+    plt.title("SHAP Waterfall – Logistic Regression Sample")
+    plt.tight_layout()
+    plt.savefig("../../outputs/figures/shap_waterfall_logreg.png", dpi=300)
+    plt.show()
+    plt.close()
+
+    print("SHAP summary and waterfall plots saved.")
+ 
 
 def train_logistic_regression_model():
     """
@@ -123,6 +172,8 @@ def train_logistic_regression_model():
     create_confusion_matrix(y_test, y_pred)
     
     plot_precision_recall_curve(y_test, y_prob)
+    
+    explain_model_with_shap(model, X_test)
     
     os.makedirs("../../models", exist_ok=True)
     
