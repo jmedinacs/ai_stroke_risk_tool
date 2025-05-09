@@ -15,6 +15,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, roc_auc_score, precision_score, recall_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.metrics import precision_recall_curve
+from skopt import BayesSearchCV
+from skopt.space import Real, Categorical
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import make_scorer, fbeta_score
 import matplotlib.pyplot as plt 
 import pandas as pd 
 import joblib 
@@ -150,37 +154,86 @@ def explain_model_with_shap(model, X_test):
 
     print("SHAP summary and waterfall plots saved.")
  
+def tune_logistic_regression_bayes(X_train, y_train):
+    """
+    Runs BayesSearchCV to find the best hyperparameters for Logistic Regression.
+    Returns the tuned model.
+    """
+    f2_scorer = make_scorer(fbeta_score, beta=2)
+
+    search_space = {
+        'C': Real(1e-3, 100.0, prior='log-uniform'),
+        'penalty': Categorical(['l2']),
+        'solver': Categorical(['lbfgs', 'saga']),
+        'max_iter': [1000]
+    }
+
+    base_model = LogisticRegression(class_weight='balanced', random_state=42)
+
+    opt = BayesSearchCV(
+        estimator=base_model,
+        search_spaces=search_space,
+        scoring=f2_scorer,
+        cv=StratifiedKFold(n_splits=5),
+        n_iter=30,
+        n_jobs=-1,
+        random_state=42,
+        verbose=2
+    )
+
+    opt.fit(X_train, y_train)
+
+    print("\n✅ Best Hyperparameters (LogReg):")
+    print(opt.best_params_)
+    print(f"Best F2 Score (CV): {opt.best_score_:.4f}")
+
+    return opt.best_estimator_
+
 
 def train_logistic_regression_model():
     """
-    Orchestrates the preprocessing, training, evaluation, and saving 
-    of the Logistic Regression model for stroke risk prediction.
+    Orchestrates preprocessing, manual training, and Bayesian tuning 
+    of the Logistic Regression model for stroke classification.
 
-    Loads preprocessed data, trains the model, prints performance metrics, 
-    saves the confusion matrix and trained model.
+    Saves evaluation metrics, visualizations, and model artifacts for both versions.
     """
-    # Retrieve training and test data splits
     X_train, X_test, y_train, y_test = preprocess_data()
-    
+
     print(f"X_train shape: {X_train.shape}")
     print(f"X_test shape: {X_test.shape}")
     print(f"y_train distribution:\n{y_train.value_counts(normalize=True)}")
     print(f"y_test distribution:\n{y_test.value_counts(normalize=True)}")    
-    
+
+    # Step 1 – Manual Logistic Regression (LRv2)
     model, y_pred, y_prob = train_model(X_train, y_train, X_test, y_test)
-    
     create_confusion_matrix(y_test, y_pred)
-    
     plot_precision_recall_curve(y_test, y_prob)
-    
     explain_model_with_shap(model, X_test)
-    
-    os.makedirs("../../models", exist_ok=True)
-    
     joblib.dump(model, "../../models/logistic_regression_v2_model.pkl")
-    print("Logistic Regression Model saved to /models")
+    print("Manual Logistic Regression model saved to /models/logistic_regression_v2_model.pkl")
+
+    # Step 2 – Bayes-Optimized Logistic Regression (LRv5)
+    print("\n🔄 Beginning Bayesian Optimization...")
+    model = tune_logistic_regression_bayes(X_train, y_train)
+
+    y_prob = model.predict_proba(X_test)[:, 1]
+    threshold = 0.3
+    y_pred = (y_prob > threshold).astype(int)
+
+    print("\n📊 Bayes-Tuned Logistic Regression Evaluation:")
+    print(classification_report(y_test, y_pred, digits=3))
+    print("ROC AUC:", roc_auc_score(y_test, y_prob))
+
+    create_confusion_matrix(y_test, y_pred)
+    plot_precision_recall_curve(y_test, y_prob)
+    explain_model_with_shap(model, X_test)
+
+    joblib.dump(model, "../../models/logistic_regression_bayes.pkl")
+    print("Bayes-Tuned Logistic Regression model saved to /models/logistic_regression_bayes.pkl")
+
+    with open("../../models/column_order_logreg.json", "w") as f:
+        json.dump(list(X_train.columns), f)
     
-    with open("../../models/column_order_logreg.json", "w") as f: json.dump(list(X_train.columns), f)
     
 if __name__ == '__main__':
     train_logistic_regression_model()
