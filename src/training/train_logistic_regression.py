@@ -26,6 +26,11 @@ import os
 import json
 import shap 
 
+import warnings
+warnings.filterwarnings("ignore")
+
+
+
 def train_model(X_train, y_train, X_test, y_test):
     """
     Trains a Logistic Regression model and evaluates it on the test set.
@@ -59,7 +64,7 @@ def train_model(X_train, y_train, X_test, y_test):
     
     return log_reg_model, y_pred, y_prob
 
-def create_confusion_matrix(y_test, y_pred):
+def create_confusion_matrix(y_test, y_pred, tag):
     """
     Generates, displays, and saves the confusion matrix.
 
@@ -75,16 +80,16 @@ def create_confusion_matrix(y_test, y_pred):
     
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Stroke", "Stroke"])
     disp.plot(cmap="Blues")
-    plt.title("Confusion Matrix - Logistic Regression")
+    plt.title(f"Confusion Matrix – {tag}")
     plt.tight_layout()
     
-    # Save the figure
-    os.makedirs("../../outputs/figures", exist_ok=True)
-    plt.savefig("../../outputs/figures/confusion_matrix_logreg.png", dpi=300)
+    output_path = f"../../outputs/figures/confusion_matrix_{tag}.png"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.savefig(output_path, dpi=300)
     plt.show()
-    print("Confusion matrix saved to /outputs/figures/")    
+    print(f"Confusion matrix saved to {output_path}") 
 
-def plot_precision_recall_curve(y_test, y_prob):
+def plot_precision_recall_curve(y_test, y_prob, tag):
     """
     Plots the precision-recall curve to visualize trade-offs at different thresholds.
 
@@ -99,16 +104,17 @@ def plot_precision_recall_curve(y_test, y_prob):
     plt.plot(thresholds, recall[:-1], label='Recall', color='orange')
     plt.xlabel("Threshold")
     plt.ylabel("Score")
-    plt.title("Precision-Recall Tradeoff (Logistic Regression)")
+    plt.title(f"Precision-Recall Tradeoff – {tag}")
     plt.legend()
     plt.grid(True)    
     
-    os.makedirs("../../outputs/figures", exist_ok=True)
-    plt.savefig("../../outputs/figures/precision_recall_curve.png", dpi=300)
+    output_path = f"../../outputs/figures/precision_recall_curve_{tag}.png"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    plt.savefig(output_path, dpi=300)
     plt.show()
-    print("Precision-recall curve saved to /outputs/figures/")
+    print(f"Precision-recall curve saved to {output_path}")
     
-def explain_model_with_shap(model, X_test):
+def explain_model_with_shap(model, X_test, tag):
     """
     Generates SHAP values and plots for Logistic Regression.
 
@@ -137,18 +143,21 @@ def explain_model_with_shap(model, X_test):
     # Summary plot
     plt.figure()
     shap.plots.bar(shap_values, show=False)
-    plt.title("SHAP Summary – Logistic Regression")
+    plt.title(f"SHAP Summary – {tag}")
     plt.tight_layout()
-    plt.savefig("../../outputs/figures/shap_summary_logreg.png", dpi=300)
+    plt.tight_layout()
+    plt.savefig(f"../../outputs/figures/shap_summary_{tag}.png", dpi=300)
     plt.show()
     plt.close()
+
+    print(f"SHAP summary saved to /outputs/figures/shap_summary_{tag}.png")
 
     # Optional: Waterfall plot for one test row
     plt.figure()
     shap.plots.waterfall(shap_values[0], show=False)
-    plt.title("SHAP Waterfall – Logistic Regression Sample")
+    plt.title(f"SHAP Waterfall – {tag}n Sample")
     plt.tight_layout()
-    plt.savefig("../../outputs/figures/shap_waterfall_logreg.png", dpi=300)
+    plt.savefig(f"../../outputs/figures/shap_waterfall_{tag}.png", dpi=300)
     plt.show()
     plt.close()
 
@@ -189,6 +198,98 @@ def tune_logistic_regression_bayes(X_train, y_train):
 
     return opt.best_estimator_
 
+def tune_logistic_regression_all_penalties(X_train, y_train, X_test, y_test, threshold=0.3):
+    """
+    Trains and evaluates Logistic Regression models with L1, L2, and ElasticNet penalties
+    using Bayesian optimization. Saves outputs and logs performance metrics.
+
+    Args:
+        X_train, y_train: Balanced training data (e.g., SMOTE applied)
+        X_test, y_test: Original imbalanced test data
+        threshold (float): Probability cutoff for classification
+    """
+    penalties = ['l1','l2','elasticnet']
+    results = []
+    
+    for penalty in penalties:
+        print(f"\n Tuning Logirstic Regression with penalty = '{penalty}'")
+        
+        search_space = {
+            'C': Real(1e-3, 100.0, prior='log-uniform'),
+            'solver': Categorical(['saga']), # NOTE: saga supports all 3 penalties
+            'penalty': Categorical([penalty]),
+            'max_iter':[1000]
+        }
+    
+        # Only ElasticNet uses l1_ratio
+        if penalty == 'elasticnet':
+            search_space['l1_ratio'] = Real(0.0, 1.0)
+
+        f2_scorer = make_scorer(fbeta_score, beta=2)    
+        
+        model = LogisticRegression(class_weight='balanced', random_state=42)
+        
+        opt = BayesSearchCV(
+            estimator=model,
+            search_spaces=search_space,
+            scoring=f2_scorer,
+            cv=StratifiedKFold(n_splits=5),
+            n_iter=30,
+            n_jobs=-1,
+            random_state=42,
+            verbose=0
+        )
+
+        opt.fit(X_train, y_train)
+        best_model = opt.best_estimator_
+
+        print(f"Best Params for {penalty}:\n{opt.best_params_}")
+        print(f"Best f2 (cv): {opt.best_score_:.4f}")
+        
+        # Inference
+        y_prob = best_model.predict_proba(X_test)[:,1]
+        y_pred = (y_prob > threshold).astype(int)
+        
+        # Evaluation
+        precision = precision_score(y_test, y_pred)
+        recall = recall_score(y_test, y_pred)
+        f2 = fbeta_score(y_test, y_pred, beta=2)
+        auc = roc_auc_score(y_test, y_prob)
+        
+        tag = f"logreg_{penalty}"
+        create_confusion_matrix(y_test, y_pred, tag)
+        plot_precision_recall_curve(y_test, y_prob, tag)
+        explain_model_with_shap(best_model, X_test, tag)
+        joblib.dump(best_model, f"../../models/{tag}.pkl")
+        
+        print(f"Model and visuals saved for {penalty}.")
+        
+        results.append({
+            'Penalty': penalty,
+            'Precision': round(precision, 4),
+            'Recall': round(recall, 4),
+            'F2': round(f2, 4),
+            'ROC AUC': round(auc, 4),
+            'Best Params': opt.best_params_
+        })
+
+    # Show summary
+    results_df = pd.DataFrame(results)
+    print("\n📊 Logistic Regression Comparison:")
+    # Create a copy for clean display without the long params
+    summary_df = results_df.drop(columns=["Best Params"])
+    
+    print("\n📊 Logistic Regression Comparison (Summary):")
+    print(summary_df.to_markdown(index=False))
+    
+    print("\n🛠 Best Hyperparameters:")
+    for row in results_df.itertuples(index=False):
+        print(f"• {row.Penalty.upper()}: {row._5}")
+
+
+    # Optional: save as CSV for reporting
+    results_df.to_csv("../../outputs/logreg_regularization_comparison.csv", index=False)
+    print("📁 Saved regularization comparison to /outputs/logreg_regularization_comparison.csv")
 
 def train_logistic_regression_model():
     """
@@ -205,15 +306,17 @@ def train_logistic_regression_model():
     print(f"y_test distribution:\n{y_test.value_counts(normalize=True)}")    
 
     # Step 1 – Manual Logistic Regression (LRv2)
+    tag_manual = "logreg_v2"
     model, y_pred, y_prob = train_model(X_train, y_train, X_test, y_test)
-    create_confusion_matrix(y_test, y_pred)
-    plot_precision_recall_curve(y_test, y_prob)
-    explain_model_with_shap(model, X_test)
-    joblib.dump(model, "../../models/logistic_regression_v2_model.pkl")
-    print("Manual Logistic Regression model saved to /models/logistic_regression_v2_model.pkl")
+    create_confusion_matrix(y_test, y_pred, tag_manual)
+    plot_precision_recall_curve(y_test, y_prob, tag_manual)
+    explain_model_with_shap(model, X_test, tag_manual)
+    joblib.dump(model, f"../../models/{tag_manual}_model.pkl")
+    print(f"Manual Logistic Regression model saved to /models/{tag_manual}_model.pkl")
 
     # Step 2 – Bayes-Optimized Logistic Regression (LRv5)
     print("\n🔄 Beginning Bayesian Optimization...")
+    tag_bayes = "logreg_bayes"
     model = tune_logistic_regression_bayes(X_train, y_train)
 
     y_prob = model.predict_proba(X_test)[:, 1]
@@ -224,15 +327,18 @@ def train_logistic_regression_model():
     print(classification_report(y_test, y_pred, digits=3))
     print("ROC AUC:", roc_auc_score(y_test, y_prob))
 
-    create_confusion_matrix(y_test, y_pred)
-    plot_precision_recall_curve(y_test, y_prob)
-    explain_model_with_shap(model, X_test)
-
-    joblib.dump(model, "../../models/logistic_regression_bayes.pkl")
-    print("Bayes-Tuned Logistic Regression model saved to /models/logistic_regression_bayes.pkl")
+    create_confusion_matrix(y_test, y_pred, tag_bayes)
+    plot_precision_recall_curve(y_test, y_prob, tag_bayes)
+    explain_model_with_shap(model, X_test, tag_bayes)
+    joblib.dump(model, f"../../models/{tag_bayes}.pkl")
+    print(f"Bayes-Tuned Logistic Regression model saved to /models/{tag_bayes}.pkl")
 
     with open("../../models/column_order_logreg.json", "w") as f:
         json.dump(list(X_train.columns), f)
+        
+    tune_logistic_regression_all_penalties(X_train, y_train, X_test, y_test)
+
+
     
     
 if __name__ == '__main__':
