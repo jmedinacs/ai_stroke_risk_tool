@@ -28,7 +28,6 @@ def tune_model_bayes(X_train, y_train):
 
     xgb = XGBClassifier(
         objective='binary:logistic',
-        use_label_encoder=False,
         eval_metric='logloss',
         random_state=42
     )

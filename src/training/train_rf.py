@@ -12,7 +12,7 @@ Returns visual and numerical evaluation metrics for downstream reporting.
 
 from preprocessing.data_preprocessing import preprocess_data
 from sklearn.ensemble import RandomForestClassifier 
-from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.metrics import classification_report, roc_auc_score, fbeta_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from skopt import BayesSearchCV
 from skopt.space import Integer, Categorical
@@ -57,6 +57,8 @@ def train_model(X_train, y_train, X_test, y_test):
     print(classification_report(y_test, y_pred, digits=3))
     
     rf_auc = roc_auc_score(y_test, y_prob)
+    f2 = fbeta_score(y_test, y_pred, beta=2)
+    print(f"f2: {f2:.4f}")
     print(f"ROC AUC: {rf_auc:.3f}")
     
     return rf_model, y_pred, y_prob
@@ -224,8 +226,10 @@ def train_bayesian_rf_model():
     threshold = 0.3
     y_pred = (y_prob > threshold).astype(int)
 
-    print("\n📊 Bayes-Tuned RF Evaluation:")
+    print("\nBayes-Tuned RF Evaluation:")
     print(classification_report(y_test, y_pred, digits=3))
+    f2 = fbeta_score(y_test, y_pred, beta=2)
+    print(f"f2: {f2:.4f}")
     print("ROC AUC:", roc_auc_score(y_test, y_prob))
 
     create_confusion_matrix(y_test, y_pred)

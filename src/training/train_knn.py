@@ -38,9 +38,11 @@ def evaluate_knn_model(model, X_test, y_test, threshold=0.5):
     """
     y_prob = model.predict_proba(X_test)[:, 1]
     y_pred = (y_prob >= threshold).astype(int)
+    f2 = fbeta_score(y_test, y_pred, beta=2)
 
-    print(f"\n📊 KNN Evaluation @ Threshold = {threshold}")
+    print(f"\nKNN Evaluation @ Threshold = {threshold}")
     print(classification_report(y_test, y_pred, digits=3))
+    print(f"\nf2-score: {f2}")
     print("ROC AUC:", roc_auc_score(y_test, y_prob))
 
     cm = confusion_matrix(y_test, y_pred)
