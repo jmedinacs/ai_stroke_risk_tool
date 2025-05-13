@@ -3,10 +3,17 @@ train_knn.py
 
 Trains and evaluates a K-Nearest Neighbors (KNN) model for stroke prediction.
 
-This script performs preprocessing, normalization, model training,
-evaluation using classification metrics and ROC AUC, and visualizes
-and saves the confusion matrix. It also persists the trained KNN model
-and the fitted scaler for reproducibility and deployment.
+This script performs:
+- Preprocessing with normalization
+- Bayesian hyperparameter optimization using F2-score
+- Evaluation using classification metrics and ROC AUC
+- Precision-recall curve and confusion matrix visualization
+- Model performance logging and figure export
+- Optional persistence of trained model and scaler (for deployment)
+
+Author: John Medina
+Date: 2025-05-09
+Project: AI Stroke Risk Tool
 """
 
 from preprocessing.data_preprocessing import preprocess_data_knn
@@ -15,49 +22,56 @@ from skopt.space import Integer, Categorical
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import make_scorer, fbeta_score
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import classification_report, roc_auc_score
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import classification_report, roc_auc_score, confusion_matrix, ConfusionMatrixDisplay, precision_recall_curve
 import matplotlib.pyplot as plt
-import os
 import numpy as np
+import os
 
 
 def evaluate_knn_model(model, X_test, y_test, threshold=0.5):
     """
-    Evaluates a trained KNN model on the test set using a specified threshold.
-    
-    Args:
+    Evaluates the KNN model using classification metrics and a custom threshold.
+
+    Parameters:
         model: Trained KNN model.
-        X_test (pd.DataFrame or np.ndarray): Scaled test features.
-        y_test (pd.Series or np.ndarray): True test labels.
-        threshold (float): Classification threshold for predicting stroke.
-    
+        X_test (np.ndarray): Scaled test features.
+        y_test (np.ndarray or pd.Series): True labels.
+        threshold (float): Probability threshold for positive prediction.
+
     Saves:
-        Confusion matrix plot to /outputs/figures/
+        Confusion matrix plot to /outputs/figures/.
     """
     y_prob = model.predict_proba(X_test)[:, 1]
     y_pred = (y_prob >= threshold).astype(int)
     f2 = fbeta_score(y_test, y_pred, beta=2)
 
-    print(f"\nKNN Evaluation @ Threshold = {threshold}")
+    print(f"\n📊 KNN Evaluation @ Threshold = {threshold}")
     print(classification_report(y_test, y_pred, digits=3))
-    print(f"\nf2-score: {f2}")
-    print("ROC AUC:", roc_auc_score(y_test, y_prob))
+    print(f"F2-Score: {f2:.4f}")
+    print(f"ROC AUC: {roc_auc_score(y_test, y_prob):.4f}")
 
     cm = confusion_matrix(y_test, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["No Stroke", "Stroke"])
     disp.plot(cmap="Blues")
     plt.title(f"Confusion Matrix – KNN (Threshold = {threshold})")
     plt.tight_layout()
+
     os.makedirs("../../outputs/figures", exist_ok=True)
     plt.savefig(f"../../outputs/figures/confusion_matrix_knn_thresh_{threshold}.png", dpi=300)
     plt.show()
     plt.close()
-    
+
+
 def tune_model_bayes(X_train, y_train):
     """
-    Tunes KNN using Bayesian Optimization (BayesSearchCV) with F2 as the scoring metric.
+    Optimizes KNN hyperparameters using Bayesian optimization with F2 as the scoring metric.
+
+    Parameters:
+        X_train (np.ndarray): Normalized training features.
+        y_train (np.ndarray or pd.Series): Training target.
+
+    Returns:
+        Trained BayesSearchCV model.
     """
     f2_scorer = make_scorer(fbeta_score, beta=2)
 
@@ -67,10 +81,8 @@ def tune_model_bayes(X_train, y_train):
         'metric': Categorical(['euclidean', 'manhattan']),
     }
 
-    knn = KNeighborsClassifier()
-
     opt = BayesSearchCV(
-        estimator=knn,
+        estimator=KNeighborsClassifier(),
         search_spaces=search_space,
         scoring=f2_scorer,
         cv=StratifiedKFold(n_splits=5),
@@ -88,14 +100,18 @@ def tune_model_bayes(X_train, y_train):
 
     return tuned_model
 
+
 def plot_precision_recall_curve(y_test, y_prob, model_name="KNN"):
     """
-    Plots and saves the precision-recall curve for a given model.
-    
-    Args:
-        y_test (array): True labels
-        y_prob (array): Predicted probabilities for class 1
-        model_name (str): Model name to use in title and filename
+    Plots and saves a precision-recall curve for a given model.
+
+    Parameters:
+        y_test (array): True binary labels.
+        y_prob (array): Predicted probabilities.
+        model_name (str): Model name used in titles and filenames.
+
+    Saves:
+        Precision-recall curve to /outputs/figures/.
     """
     precision, recall, thresholds = precision_recall_curve(y_test, y_prob)
 
@@ -108,18 +124,27 @@ def plot_precision_recall_curve(y_test, y_prob, model_name="KNN"):
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    
+
     os.makedirs("../../outputs/figures", exist_ok=True)
     plt.savefig(f"../../outputs/figures/precision_recall_curve_{model_name.lower()}.png", dpi=300)
     plt.show()
     plt.close()
 
+
 def train_knn_model():
-    """ """
+    """
+    Driver function for training and evaluating a KNN model:
+    - Loads and preprocesses data
+    - Tunes KNN with BayesSearchCV
+    - Evaluates model with classification metrics and visualizations
+    - Plots precision-recall curve
+
+    Returns:
+        None
+    """
     X_train, X_test, y_train, y_test, scaler = preprocess_data_knn()
     model = tune_model_bayes(X_train, y_train)
     evaluate_knn_model(model, X_test, y_test, threshold=0.3)
-    # Get predicted probabilities
     y_prob = model.predict_proba(X_test)[:, 1]
     plot_precision_recall_curve(y_test, y_prob, model_name="KNN")
 

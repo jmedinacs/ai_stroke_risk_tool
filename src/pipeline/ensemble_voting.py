@@ -1,13 +1,21 @@
 """
 ensemble_model.py
 
-Constructs and evaluates a voting ensemble using Logistic Regression,
-Random Forest, and XGBoost models optimized via BayesSearchCV.
+Constructs and evaluates a soft-voting ensemble classifier using tuned 
+Logistic Regression, Random Forest, and XGBoost models.
 
-The ensemble aggregates predictions and evaluates final performance
-on the imbalanced test set. This module assumes all individual models
-and the column order are already saved and available.
+This script:
+- Loads pre-trained individual models and column schema
+- Builds a weighted soft-voting classifier
+- Evaluates performance (classification metrics, F2, ROC AUC)
+- Optionally optimizes ensemble voting weights under recall/precision constraints
+- Saves the ensemble model for deployment
+
+Author: John Medina
+Date: 2025-05-11
+Project: AI Stroke Risk Tool
 """
+
 import sys
 print(sys.executable)
 import joblib
@@ -49,7 +57,7 @@ def evaluate_voting_model(model, X_test, y_test, threshold=0.3):
     y_prob = model.predict_proba(X_test)[:, 1]
     y_pred = (y_prob >= threshold).astype(int)
 
-    print(f"\n📊 Voting Ensemble Evaluation @ Threshold = {threshold}")
+    print(f"\nVoting Ensemble Evaluation @ Threshold = {threshold}")
     print(classification_report(y_test, y_pred, digits=3))
     print("ROC AUC:", roc_auc_score(y_test, y_prob))
 
@@ -122,7 +130,6 @@ def run_voting_pipeline():
     joblib.dump(ensemble, "../../models/voting_ensemble.pkl")
     print("Voting ensemble saved to /models/voting_ensemble.pkl")
     
-    X_train, X_test, y_train, y_test = preprocess_data()
     X_train = X_train[column_order]
     X_test = X_test[column_order]
 
@@ -136,6 +143,11 @@ def run_voting_pipeline():
         evaluate_voting_model(ensemble, X_test, y_test)
         joblib.dump(ensemble, "../../models/voting_ensemble.pkl")
         print("Voting ensemble saved to /models/voting_ensemble.pkl")
+        
+        # Save best weights to JSON
+        with open("../../models/voting_weights.json", "w") as f:
+            json.dump(list(best_weights), f)
+        print("Voting weights saved to /models/voting_weights.json")
 
 
 if __name__ == '__main__':

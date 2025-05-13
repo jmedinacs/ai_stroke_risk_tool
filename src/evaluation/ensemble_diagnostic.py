@@ -1,19 +1,40 @@
+"""
+ensemble_diagnostic.py
+
+This module runs diagnostics on the final voting ensemble model, including:
+- Learning curve visualization
+- Model agreement analysis
+- Voting breakdown by prediction agreement level
+- Export of summaries for reporting and presentation
+
+Author: John Medina
+Date: 2025-05-11
+Project: ai_stroke_risk_tool
+"""
+
+import os
+import json
+import joblib
 import numpy as np
-import pandas as pd 
+import pandas as pd
 import matplotlib.pyplot as plt
+
 from sklearn.calibration import calibration_curve
 from sklearn.model_selection import learning_curve
 from sklearn.metrics import make_scorer, fbeta_score
+
 from preprocessing.data_preprocessing import preprocess_data
-import matplotlib.pyplot as plt
-import json 
-import joblib
-import os
 
 
 def plot_learning_curve(model, X_train, y_train, tag="ensemble"):
     """
-    Plots and saves the learning curve for the model.
+    Plots and saves the learning curve for a model using F2 score.
+
+    Parameters:
+    - model: Trained classifier
+    - X_train: Training features
+    - y_train: Training labels
+    - tag (str): Model identifier used in the plot title and filename
     """
     scorer = make_scorer(fbeta_score, beta=2)
     train_sizes, train_scores, val_scores = learning_curve(
@@ -43,10 +64,15 @@ def plot_learning_curve(model, X_train, y_train, tag="ensemble"):
     plt.savefig(f"../../outputs/figures/learning_curve_{tag}.png", dpi=300)
     plt.show()
     print(f"Saved learning curve: learning_curve_{tag}.png")
-    
+
+
 def plot_voting_agreement_pie(summary, tag="ensemble"):
     """
-    Plots and saves a pie chart from the agreement summary.
+    Plots and saves a pie chart summarizing model prediction agreement levels.
+
+    Parameters:
+    - summary (Series): Value counts of agreement levels
+    - tag (str): Used in filename
     """
     plt.figure(figsize=(6, 6))
     summary.plot.pie(
@@ -60,35 +86,34 @@ def plot_voting_agreement_pie(summary, tag="ensemble"):
     plt.tight_layout()
     plt.savefig(f"../../outputs/figures/voting_agreement_pie_{tag}.png", dpi=300)
     plt.show()
-    print(f"Saved voting agreement pie chart: voting_agreement_pie_{tag}.png")    
+    print(f"Saved voting agreement pie chart: voting_agreement_pie_{tag}.png")
+
 
 def analyze_voting_agreement(ensemble, X_test, y_test, threshold=0.3):
     """
-    Analyzes agreement between individual models and the ensemble decision.
+    Analyzes agreement between individual models and ensemble predictions.
 
-    Outputs a summary of:
-        - 3-model agreement
-        - 2-model agreement
-        - 1-model agreement
-        - Who disagreed
+    Parameters:
+    - ensemble: Trained VotingClassifier
+    - X_test (DataFrame): Test features
+    - y_test (Series): True test labels
+    - threshold (float): Classification threshold for stroke prediction
+
+    Returns:
+    - df (DataFrame): Detailed prediction comparison table
+    - summary (Series): Agreement level counts
+    - google_summary (DataFrame): Aggregated Google Sheets-style table
     """
     estimators = dict(ensemble.named_estimators_)
-    logreg = estimators['logreg']
-    rf = estimators['rf']
-    xgb = estimators['xgb']
-
-    # Predict with each model
     preds = {
-        "logreg": (logreg.predict_proba(X_test)[:, 1] >= threshold).astype(int),
-        "rf":     (rf.predict_proba(X_test)[:, 1] >= threshold).astype(int),
-        "xgb":    (xgb.predict_proba(X_test)[:, 1] >= threshold).astype(int),
+        "logreg": (estimators['logreg'].predict_proba(X_test)[:, 1] >= threshold).astype(int),
+        "rf":     (estimators['rf'].predict_proba(X_test)[:, 1] >= threshold).astype(int),
+        "xgb":    (estimators['xgb'].predict_proba(X_test)[:, 1] >= threshold).astype(int),
         "ensemble": (ensemble.predict_proba(X_test)[:, 1] >= threshold).astype(int),
         "actual": y_test.values
     }
 
     df = pd.DataFrame(preds)
-
-    # Count number of models predicting stroke per row
     df['votes_for_stroke'] = df[['logreg', 'rf', 'xgb']].sum(axis=1)
     df['agreement_level'] = df['votes_for_stroke'].map({
         0: "All predict no-stroke",
@@ -97,61 +122,90 @@ def analyze_voting_agreement(ensemble, X_test, y_test, threshold=0.3):
         3: "All predict stroke"
     })
 
-    # Tally results
     summary = df['agreement_level'].value_counts().sort_index()
     print("\n🗳️ Voting Agreement Summary:")
     for level, count in summary.items():
         pct = count / len(df) * 100
         print(f"{level}: {count} cases ({pct:.1f}%)")
-        
-    # Determine if ensemble prediction was correct
+
     df['correct'] = (df['ensemble'] == df['actual'])
-    
-    # Grouped accuracy summary by agreement level and actual label
+
     grouped = df.groupby(['agreement_level', 'actual']).size().unstack(fill_value=0)
     grouped.columns = ['True Negative (0)', 'True Positive (1)']
     grouped['Total'] = grouped.sum(axis=1)
     grouped['TP Rate (%)'] = (grouped['True Positive (1)'] / grouped['Total']) * 100
-    
-    print("\n📊 True Label Breakdown by Agreement Level:")
+
+    print("\nTrue Label Breakdown by Agreement Level:")
     print(grouped.round(1).to_string())
 
-    return df, summary
+    # Google Sheets-style table
+    google_summary = pd.DataFrame(columns=[
+        "Agreement Level", "Instances", "True Positive", "Percent of All Strokes"
+    ])
+
+    total_strokes = (df["actual"] == 1).sum()
+    label_map = {
+        "1 predicts stroke": "1 Model Predict Stroke",
+        "2 predict stroke": "2 Models Predict Stroke",
+        "All predict stroke": "All Models Predict Stroke",
+        "All predict no-stroke": "No Model Predicts Stroke"
+    }
+
+    for level, row in grouped.iterrows():
+        label = label_map.get(level, level)
+        instances = int(row["Total"])
+        true_positives = int(row["True Positive (1)"])
+        pct_of_all = f"{(true_positives / total_strokes) * 100:.2f}%"
+
+        google_summary = pd.concat([
+            google_summary,
+            pd.DataFrame([{
+                "Agreement Level": label,
+                "Instances": instances,
+                "True Positive": true_positives,
+                "Percent of All Strokes": pct_of_all
+            }])
+        ], ignore_index=True)
+
+    print("\n📋 Google Sheets-style summary:")
+    print(google_summary.to_string(index=False))
+    google_summary.to_csv("../../outputs/voting_agreement_google_style.csv", index=False)
+
+    return df, summary, google_summary
+
 
 def load_ensemble_and_columns():
     """
-    Loads the final ensemble model and column order for diagnostics.
+    Loads the final ensemble model and column order used during training.
+
+    Returns:
+    - ensemble: Trained VotingClassifier
+    - column_order (list): Ordered list of feature names
     """
     ensemble = joblib.load("../../models/voting_ensemble.pkl")
-    
     with open("../../models/column_order_logreg.json") as f:
         column_order = json.load(f)
-
     return ensemble, column_order
-
-
 
 
 def run_ensemble_diagnostics():
     """
-    Runs calibration and learning curve diagnostics for a trained ensemble model.
-    
-    Args:
-        model: Trained VotingClassifier or other classifier with `predict_proba`.
-        X_train, X_test, y_train, y_test: Dataset splits.
-        tag (str): Used in filenames for saving plots.
+    Runs ensemble diagnostics including:
+    - Learning curve visualization
+    - Agreement analysis
+    - Export of pie chart, agreement table, and summary
     """
     ensemble, column_order = load_ensemble_and_columns()
     X_train, X_test, y_train, y_test = preprocess_data()
     X_train = X_train[column_order]
     X_test = X_test[column_order]
 
-    tag ='ensemble_v2'
-    print(f"\n📈 Running diagnostics for: {tag}")
+    tag = 'ensemble_v2'
+    print(f"\nRunning diagnostics for: {tag}")
     plot_learning_curve(ensemble, X_train, y_train, tag)
-    
-    df_votes, agreement_summary = analyze_voting_agreement(ensemble, X_test, y_test)
-    plot_voting_agreement_pie(agreement_summary, tag="ensemble_v2")
+
+    df_votes, agreement_summary, google_summary = analyze_voting_agreement(ensemble, X_test, y_test)
+    plot_voting_agreement_pie(agreement_summary, tag)
     df_votes.to_csv("../../outputs/voting_agreement_analysis.csv", index=False)
     print("Saved voting agreement analysis to /outputs/voting_agreement_analysis.csv")
 

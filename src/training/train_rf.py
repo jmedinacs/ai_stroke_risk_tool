@@ -3,16 +3,22 @@ train_random_forest.py
 
 Trains and evaluates a Random Forest model for stroke prediction.
 
-This module loads preprocessed data, fits a Random Forest classifier using 
-the balanced training set, evaluates the model on the original test set, 
-displays and saves the confusion matrix, and stores the trained model to disk.
+This script performs:
+- Preprocessing and SMOTE balancing
+- Manual and BayesSearchCV-tuned training
+- Evaluation using classification metrics, F2-score, and ROC AUC
+- SHAP feature importance interpretation
+- Precision-recall and confusion matrix visualizations
+- Model and artifact persistence for deployment
 
-Returns visual and numerical evaluation metrics for downstream reporting.
+Author: John Medina
+Date: 2025-05-11
+Project: AI Stroke Risk Tool
 """
 
 from preprocessing.data_preprocessing import preprocess_data
 from sklearn.ensemble import RandomForestClassifier 
-from sklearn.metrics import classification_report, roc_auc_score, fbeta_score
+from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from skopt import BayesSearchCV
 from skopt.space import Integer, Categorical
@@ -95,7 +101,7 @@ def explain_model_with_shap(model, X_test):
     Generates SHAP values and plots for Logistic Regression.
 
     Args:
-        model (LogisticRegression): Trained logistic regression model.
+        model (Random Forest): Trained Random Forest model.
         X_test (pd.DataFrame): Test features used for SHAP explanations.
 
     Saves:
@@ -238,8 +244,6 @@ def train_bayesian_rf_model():
 
     joblib.dump(model, "../../models/random_forest_bayes.pkl")
     print("Bayes-tuned RF model saved to /models/random_forest_bayes.pkl")
-
-
 
 
 

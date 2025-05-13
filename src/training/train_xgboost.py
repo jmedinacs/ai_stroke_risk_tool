@@ -1,3 +1,21 @@
+"""
+train_xgboost.py
+
+Trains and evaluates an XGBoost classifier for stroke prediction.
+
+This script performs:
+- Preprocessing with class balancing
+- Hyperparameter tuning using Bayesian optimization (BayesSearchCV)
+- Threshold optimization for best F2 score
+- Evaluation with ROC AUC, precision-recall, confusion matrix
+- SHAP explainability with summary and waterfall plots
+- Model persistence for deployment
+
+Author: John Medina
+Date: 2025-05-11
+Project: AI Stroke Risk Tool
+"""
+
 from preprocessing.data_preprocessing import preprocess_data
 from sklearn.metrics import make_scorer, fbeta_score, classification_report, roc_auc_score, precision_recall_curve, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.model_selection import StratifiedKFold
@@ -54,9 +72,6 @@ def tune_model_bayes(X_train, y_train):
 
 def evaluate_tuned_xgb(model, X_test, y_test, threshold=0.3):
     y_prob = model.predict_proba(X_test)[:, 1]
-    y_pred = (y_prob > threshold).astype(int)
-    
-    threshold = 0.24
     y_pred = (y_prob > threshold).astype(int)
 
     print("\nBayes-Tuned XGBoost Evaluation:")

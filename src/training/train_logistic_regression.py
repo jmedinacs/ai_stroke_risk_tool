@@ -3,11 +3,17 @@ train_logistic_regression.py
 
 Trains and evaluates a Logistic Regression model for stroke prediction.
 
-This module loads preprocessed data, fits a Logistic Regression model using the 
-balanced training data, evaluates performance on the original imbalanced test set, 
-displays and saves the confusion matrix, and persists the trained model to disk.
+This script performs:
+- Preprocessing and class balancing (via SMOTE)
+- Manual model training
+- Bayesian hyperparameter optimization (F2-score)
+- SHAP explainability visualizations
+- Comparison of L1, L2, and ElasticNet penalties
+- Model and evaluation export (confusion matrix, PR curve, CSV summary)
 
-Returns visual and numerical metrics for model performance evaluation.
+Author: John Medina
+Date: 2025-05-11
+Project: AI Stroke Risk Tool
 """
 
 from preprocessing.data_preprocessing import preprocess_data
