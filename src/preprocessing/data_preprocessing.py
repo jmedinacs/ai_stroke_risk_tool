@@ -14,11 +14,11 @@ Returns preprocessed and ready-to-train datasets for machine learning models.
 """
 
 from utils.data_io import load_clean_data
-import pandas as pd 
+import pandas as pd
 from sklearn.model_selection import train_test_split
-from imblearn.over_sampling import SMOTE 
-from sklearn.preprocessing import StandardScaler 
-import joblib 
+from imblearn.over_sampling import SMOTE
+from sklearn.preprocessing import StandardScaler
+import joblib
 
 def drop_insignificant_features(df):
     """

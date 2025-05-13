@@ -2,7 +2,8 @@
 eda_categorical.py
 
 This module contains functions to visualize the distribution of categorical features
-in the stroke risk dataset. Each plot is saved as a PNG file and optionally shown interactively.
+in the stroke risk dataset. Each chart is saved as a labeled PNG and can optionally
+be displayed interactively.
 
 Author: John Medina
 Date: 2025-04-29
@@ -12,19 +13,18 @@ Project: Stroke Risk ML Addendum
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
-from matplotlib.pyplot import legend
 
 def explore_categoricals(df, output_dir=None, show_plot=False):
     """
-    Generate and save bar charts for categorical feature distributions.
+    Generates and saves bar charts for key categorical feature distributions.
 
     Parameters:
-    - df (DataFrame): Cleaned stroke dataset.
-    - output_dir (str): Folder path to save plots (default: '../../outputs/figures/').
-    - show_plot (bool): If True, display each chart interactively.
+        df (pd.DataFrame): Cleaned stroke dataset.
+        output_dir (str or None): Directory to save plots. Default: '../../outputs/figures/'.
+        show_plot (bool): Whether to display plots interactively.
 
     Returns:
-    - None
+        None
     """
     
     if output_dir is None:
@@ -45,16 +45,16 @@ def explore_categoricals(df, output_dir=None, show_plot=False):
         
 def plot_bar_chart(df, column, output_dir, show_plot=False):
     """
-    Plot and save a bar chart showing distribution of a single categorical feature.
+    Creates and saves a bar chart for a given categorical feature.
 
     Parameters:
-    - df (DataFrame): Cleaned stroke dataset.
-    - column (str): Column to visualize.
-    - output_dir (str): Directory to save the PNG plot.
-    - show_plot (bool): Whether to display the chart interactively.
+        df (pd.DataFrame): Cleaned stroke dataset.
+        column (str): Categorical column to visualize.
+        output_dir (str): Directory to save the output PNG.
+        show_plot (bool): Whether to display the chart interactively.
 
     Returns:
-    - None
+        None
     """
     plt.figure(figsize=(8,5))
     ax = sns.countplot(data=df, x=column, 

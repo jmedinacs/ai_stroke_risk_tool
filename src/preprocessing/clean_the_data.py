@@ -1,22 +1,22 @@
 """
-data_cleaning.py
+clean_the_data.py
 
-This module contains functions for inspecting, cleaning, and preparing the raw Stroke Risk dataset
-for machine learning modeling. Cleaning steps include handling missing values, removing rare categories,
-and encoding categorical variables for supervised learning.
+This script handles the full data cleaning process for the Stroke Risk dataset. It loads the raw data,
+performs validation and preprocessing steps, and saves the cleaned version for use in EDA and modeling.
 
 Author: John Medina
 Date: 2025-04-28
 Project: Stroke Risk ML Addendum
 
-Notes:
-- Missing 'bmi' values will be imputed using the median, due to skewness in the BMI distribution.
-- Rows with gender 'Other' will be removed due to extremely low occurrence.
-- Categorical variables will be standardized for clean encoding.
+Cleaning steps:
+- Impute missing 'bmi' values using the median (due to right skew).
+- Remove rare 'Other' category in gender (1 instance).
+- Standardize all text fields (lowercase, trimmed).
+- Drop duplicates (excluding the unique 'id' column).
+- Validate dataset at each major step with summary output.
 """
-import utils.data_io as util 
+import utils.data_io as util
 import pandas as pd
-import os
 
 
 def inspect_data(df):
@@ -78,13 +78,13 @@ def inspect_categorical_distribution(df):
 
 def remove_rare_gender(df):
     """
-    Remove rows where 'gender' is 'other', due to extreme rarity.
+    Remove the single row where 'gender' is 'Other', due to extreme rarity.
 
     Parameters:
     - df (DataFrame): Input dataset.
 
     Returns:
-    - DataFrame: Dataset with rare gender category removed.
+    - DataFrame: Dataset with rare category removed.
     """
     before_rows = df.shape[0]
     df = df[df['gender'] != 'Other'].copy()

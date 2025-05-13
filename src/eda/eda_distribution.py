@@ -1,12 +1,12 @@
 """
 eda_distribution.py
 
-This module contains functions for visualizing the distribution of numerical variables
-in the stroke risk dataset, such as age, bmi, and average glucose level.
+This module provides functions to visualize the distribution of numerical variables
+in the stroke risk dataset, including age, BMI, and average glucose level.
 
 Author: John Medina
 Date: 2025-04-29
-Project: Stroke Risk ML Addendum
+Project: AI Stroke Risk Tool
 """
 
 import matplotlib.pyplot as plt
@@ -15,15 +15,18 @@ import os
 
 def explore_numerics(df, output_dir= None, show_plot=False):
     """
-    Generate and save histograms for key numeric features.
+    Generates and saves histograms with KDE overlays for key numeric features:
+    - age
+    - bmi
+    - avg_glucose_level
 
     Parameters:
-    - df (DataFrame): Cleaned stroke dataset.
-    - output_dir (str): Folder path to save plots (default: '../../outputs/figures/').
-    - show_plot (bool): Whether to display the plots interactively.
+        df (pd.DataFrame): Cleaned stroke dataset.
+        output_dir (str or None): Directory to save plots. Default: '../../outputs/figures/'.
+        show_plot (bool): Whether to display plots interactively.
 
     Returns:
-    - None
+        None
     """
         
     plot_histogram(df, 'age', output_dir, show_plot)
@@ -32,16 +35,16 @@ def explore_numerics(df, output_dir= None, show_plot=False):
     
 def plot_histogram(df, column, output_dir, show_plot=False):
     """
-    Create and save a histogram with KDE for a given numeric column.
+    Creates and saves a histogram with KDE for a specified numeric column.
 
     Parameters:
-    - df (DataFrame): Cleaned stroke dataset.
-    - column (str): Column to plot.
-    - output_dir (str): Directory to save the output plot.
-    - show_plot (bool): Whether to display the plot interactively.
+        df (pd.DataFrame): Cleaned stroke dataset.
+        column (str): Column to plot.
+        output_dir (str or None): Directory to save the output plot.
+        show_plot (bool): Whether to display the plot interactively.
 
     Returns:
-    - None
+        None
     """
     if output_dir is None:
         output_dir="../../outputs/figures"

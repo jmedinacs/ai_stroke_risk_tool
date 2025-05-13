@@ -1,13 +1,13 @@
 """
 eda_continuous_vs_stroke.py
 
-This module runs point-biserial correlation between continuous features
-and the binary target variable `stroke`. It identifies which continuous features
+This module runs point-biserial correlations between continuous features
+and the binary target variable `stroke`. It identifies which numeric features
 are statistically associated with stroke occurrence.
 
 Author: John Medina
 Date: 2025-04-30
-Project: Stroke Risk ML Addendum
+Project: AI Stroke Risk Tool
 """
 
 import pandas as pd 
@@ -15,24 +15,19 @@ from scipy.stats import pointbiserialr
 
 def run_point_biserial(df):
     """
-    Compute point-biserial correlations between continuous features and `stroke`.
+    Computes point-biserial correlations between continuous features and the binary stroke target.
 
     Parameters:
-    - df (DataFrame): Cleaned stroke dataset.
+        df (pd.DataFrame): Cleaned stroke dataset.
 
     Returns:
-    - DataFrame: Table with:
-        - feature name
-        - correlation coefficient (r)
-        - p-value
-        - significance flag (True if p < 0.05)
+        pd.DataFrame: Summary table containing:
+            - feature: Feature name
+            - correlation: Point-biserial correlation coefficient (r)
+            - p_value: P-value for the test
+            - significant: Boolean flag (True if p < 0.05)
     """
-    continuous_features = [
-        'age',
-        'bmi',
-        'avg_glucose_level'
-    ]
-    
+    continuous_features = ['age', 'bmi', 'avg_glucose_level']
     results = []
     
     for feature in continuous_features:

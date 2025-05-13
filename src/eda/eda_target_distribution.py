@@ -6,7 +6,7 @@ in the stroke risk dataset. It prints counts and percentages, and saves a labele
 
 Author: John Medina
 Date: 2025-04-30
-Project: Stroke Risk ML Addendum
+Project: AI Stroke Risk Tool
 """
 
 import matplotlib.pyplot as plt
@@ -15,12 +15,15 @@ import os
 
 def explore_target_feature(df, output_dir= None, show_plot=False):
     """
-    Visualizes and summarizes the distribution of the target feature (stroke).
+    Visualizes and summarizes the distribution of the target variable (stroke).
     
     Parameters:
-    - df (DataFrame): Cleaned stroke dataset
-    - output_dir (str): Folder path to save plots
-    - show_plot (bool): Whether to display the chart interactively
+        df (pd.DataFrame): Cleaned dataset containing the 'stroke' column.
+        output_dir (str or None): Directory to save the bar chart (default: '../../outputs/figures').
+        show_plot (bool): Whether to display the chart interactively.
+    
+    Returns:
+        None
     """
     
     if output_dir is None:
