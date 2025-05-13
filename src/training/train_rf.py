@@ -116,7 +116,7 @@ def explain_model_with_shap(model, X_test):
             print(f"Failed to convert column '{col}': {e}")
 
     # Use new SHAP API for tree-based model
-    explainer = shap.Explainer(model, X_test_float)
+    explainer = shap.Explainer(model, X_test_float, feature_perturbation="interventional")
     shap_values = explainer(X_test_float, check_additivity=False)
 
     shap_values.feature_names = X_test_float.columns.tolist()
@@ -151,7 +151,7 @@ def explain_model_with_shap(model, X_test):
     plt.tight_layout()
     
     # Save figure
-    plt.savefig("../../outputs/figures/shap_summary_rf_manual.png", dpi=300)
+    plt.savefig("../../outputs/figures/shap_summary_rf_bayes.png", dpi=300)
     plt.show()
 
 def plot_precision_recall_curve(y_test, y_prob):
@@ -273,4 +273,4 @@ def train_random_forest_model():
     
 
 if __name__ == '__main__':
-    train_random_forest_model()
+    train_bayesian_rf_model()

@@ -110,7 +110,7 @@ def evaluate_tuned_xgb(model, X_test, y_test, threshold=0.3):
     shap.plots.bar(shap_values, show=False)
     plt.title("SHAP Summary – XGBoost (Bayes Tuned)")
     plt.tight_layout()
-    plt.savefig("../../outputs/figures/shap_summary_xgb.png", dpi=300)
+    plt.savefig("../../outputs/figures/shap_summary_xgb_bayes.png", dpi=300)
     plt.show()
     plt.close()
 
