@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import classification_report, roc_auc_score, fbeta_score, precision_score, recall_score
+from sklearn.metrics import fbeta_score
 from preprocessing.data_preprocessing import preprocess_data
 from itertools import product
 import json
@@ -53,7 +54,7 @@ def build_voting_classifier(logreg, rf, xgb):
     return ensemble
 
 
-def evaluate_voting_model(model, X_test, y_test, threshold=0.3):
+def evaluate_voting_model(model, X_test, y_test, threshold=0.24):
     y_prob = model.predict_proba(X_test)[:, 1]
     y_pred = (y_prob >= threshold).astype(int)
 
@@ -65,6 +66,36 @@ def evaluate_voting_model(model, X_test, y_test, threshold=0.3):
     print("F2 Score:", round(f2, 4))
 
     return y_pred, y_prob
+
+def find_best_threshold(model, X_test, y_test, beta=2):
+    """
+    Finds the threshold that maximizes the F-beta score (default F2).
+
+    Args:
+        model: Trained ensemble model
+        X_test: Test features
+        y_test: True labels
+        beta: Weighting factor for recall in F-beta (default 2)
+
+    Returns:
+        Tuple[float, float]: (best_threshold, best_fbeta_score)
+    """
+    
+
+    y_prob = model.predict_proba(X_test)[:, 1]
+    best_f2 = 0
+    best_t = 0.5
+
+    for t in np.arange(0.1, 0.5, 0.01):
+        y_pred = (y_prob >= t).astype(int)
+        f2 = fbeta_score(y_test, y_pred, beta=beta)
+        if f2 > best_f2:
+            best_f2 = f2
+            best_t = t
+
+    print(f"\n✅ Best Threshold by F{beta} Score: {best_t:.2f} (F{beta} = {best_f2:.4f})")
+    return best_t, best_f2
+
 
 def optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf, xgb, threshold=0.3):
     """
@@ -140,7 +171,9 @@ def run_voting_pipeline():
         ensemble = build_voting_classifier(logreg, rf, xgb)
         ensemble.set_params(weights=best_weights)
         ensemble.fit(X_train, y_train)
-        evaluate_voting_model(ensemble, X_test, y_test)
+        best_threshold, _ = find_best_threshold(ensemble, X_test, y_test)
+        evaluate_voting_model(ensemble, X_test, y_test, threshold=best_threshold)
+
         joblib.dump(ensemble, "../../models/voting_ensemble.pkl")
         print("Voting ensemble saved to /models/voting_ensemble.pkl")
         

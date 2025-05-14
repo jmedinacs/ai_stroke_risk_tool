@@ -33,7 +33,8 @@ import json
 import shap 
 
 import warnings
-warnings.filterwarnings("ignore")
+from sklearn.exceptions import ConvergenceWarning
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 
 
@@ -64,7 +65,9 @@ def train_model(X_train, y_train, X_test, y_test):
     # Evaluation metrics
     print("\n Classification Report (Logistic Regression): ")
     print(classification_report(y_test, y_pred, digits=3))
-
+    
+    f2 = fbeta_score(y_test, y_pred, beta=2)
+    print(f"f2: {f2:.4f}")
     auc = roc_auc_score(y_test, y_prob)
     print(f"ROC AUC: {auc: 3f}")
     
@@ -198,7 +201,7 @@ def tune_logistic_regression_bayes(X_train, y_train):
 
     opt.fit(X_train, y_train)
 
-    print("\n✅ Best Hyperparameters (LogReg):")
+    print("\nBest Hyperparameters (LogReg):")
     print(opt.best_params_)
     print(f"Best F2 Score (CV): {opt.best_score_:.4f}")
 
@@ -281,23 +284,23 @@ def tune_logistic_regression_all_penalties(X_train, y_train, X_test, y_test, thr
 
     # Show summary
     results_df = pd.DataFrame(results)
-    print("\n📊 Logistic Regression Comparison:")
+    print("\nLogistic Regression Comparison:")
     # Create a copy for clean display without the long params
     summary_df = results_df.drop(columns=["Best Params"])
     
-    print("\n📊 Logistic Regression Comparison (Summary):")
+    print("\nLogistic Regression Comparison (Summary):")
     print(summary_df.to_markdown(index=False))
     
-    print("\n🛠 Best Hyperparameters:")
+    print("\nBest Hyperparameters:")
     for row in results_df.itertuples(index=False):
         print(f"• {row.Penalty.upper()}: {row._5}")
 
 
     # Optional: save as CSV for reporting
     results_df.to_csv("../../outputs/logreg_regularization_comparison.csv", index=False)
-    print("📁 Saved regularization comparison to /outputs/logreg_regularization_comparison.csv")
+    print("Saved regularization comparison to /outputs/logreg_regularization_comparison.csv")
 
-def train_logistic_regression_model():
+def train_logistic_regression_model(train_manual=False):
     """
     Orchestrates preprocessing, manual training, and Bayesian tuning 
     of the Logistic Regression model for stroke classification.
@@ -311,17 +314,18 @@ def train_logistic_regression_model():
     print(f"y_train distribution:\n{y_train.value_counts(normalize=True)}")
     print(f"y_test distribution:\n{y_test.value_counts(normalize=True)}")    
 
-    # Step 1 – Manual Logistic Regression (LRv2)
-    tag_manual = "logreg_v2"
-    model, y_pred, y_prob = train_model(X_train, y_train, X_test, y_test)
-    create_confusion_matrix(y_test, y_pred, tag_manual)
-    plot_precision_recall_curve(y_test, y_prob, tag_manual)
-    explain_model_with_shap(model, X_test, tag_manual)
-    joblib.dump(model, f"../../models/{tag_manual}_model.pkl")
-    print(f"Manual Logistic Regression model saved to /models/{tag_manual}_model.pkl")
+    if train_manual:
+        # Step 1 – Manual Logistic Regression (LRv2)
+        tag_manual = "logreg_v2"
+        model, y_pred, y_prob = train_model(X_train, y_train, X_test, y_test)
+        create_confusion_matrix(y_test, y_pred, tag_manual)
+        plot_precision_recall_curve(y_test, y_prob, tag_manual)
+        explain_model_with_shap(model, X_test, tag_manual)
+        joblib.dump(model, f"../../models/{tag_manual}_model.pkl")
+        print(f"Manual Logistic Regression model saved to /models/{tag_manual}_model.pkl")
 
     # Step 2 – Bayes-Optimized Logistic Regression (LRv5)
-    print("\n🔄 Beginning Bayesian Optimization...")
+    print("\nBeginning Bayesian Optimization...")
     tag_bayes = "logreg_bayes"
     model = tune_logistic_regression_bayes(X_train, y_train)
 
@@ -329,8 +333,10 @@ def train_logistic_regression_model():
     threshold = 0.3
     y_pred = (y_prob > threshold).astype(int)
 
-    print("\n📊 Bayes-Tuned Logistic Regression Evaluation:")
+    print("\nBayes-Tuned Logistic Regression Evaluation:")
     print(classification_report(y_test, y_pred, digits=3))
+    f2 = fbeta_score(y_test, y_pred, beta=2)
+    print(f"f2: {f2:.4f}")
     print("ROC AUC:", roc_auc_score(y_test, y_prob))
 
     create_confusion_matrix(y_test, y_pred, tag_bayes)

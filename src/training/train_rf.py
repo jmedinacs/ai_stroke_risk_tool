@@ -247,7 +247,7 @@ def train_bayesian_rf_model():
 
 
 
-def train_random_forest_model():
+def train_random_forest_model(train_manual=False):
     """
     Orchestrates preprocessing, training, evaluation, and saving of 
     the Random Forest model for stroke classification.
@@ -255,17 +255,18 @@ def train_random_forest_model():
     Executes the training pipeline using preprocessed data, evaluates 
     the model, saves the confusion matrix plot, and stores the trained model.
     """
-    # Step 1 – Manual training
-    X_train, X_test, y_train, y_test = preprocess_data()
-    model, y_pred, y_prob = train_model(X_train, y_train, X_test, y_test)
-
-    create_confusion_matrix(y_test, y_pred)
-    plot_precision_recall_curve(y_test, y_prob)
-    explain_model_with_shap(model, X_test)
-
-    os.makedirs("../../models", exist_ok=True)
-    joblib.dump(model, "../../models/random_forest_model.pkl")
-    print("RFv3 saved to /models/random_forest_model.pkl")
+    if train_manual: 
+        # Step 1 – Manual training
+        X_train, X_test, y_train, y_test = preprocess_data()
+        model, y_pred, y_prob = train_model(X_train, y_train, X_test, y_test)
+    
+        create_confusion_matrix(y_test, y_pred)
+        plot_precision_recall_curve(y_test, y_prob)
+        explain_model_with_shap(model, X_test)
+    
+        os.makedirs("../../models", exist_ok=True)
+        joblib.dump(model, "../../models/random_forest_model.pkl")
+        print("RFv3 saved to /models/random_forest_model.pkl")
 
     # Step 2 – Bayesian optimization and retraining
     print("\n🔄 Beginning Bayesian Optimization...")

@@ -170,8 +170,6 @@ def clean_data():
     
     print(f"Saving cleaned data")
     util.save_clean_data(df)
-    
-    
    
     return df
       

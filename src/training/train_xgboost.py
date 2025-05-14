@@ -76,6 +76,8 @@ def evaluate_tuned_xgb(model, X_test, y_test, threshold=0.3):
 
     print("\nBayes-Tuned XGBoost Evaluation:")
     print(classification_report(y_test, y_pred, digits=3))
+    f2 = fbeta_score(y_test, y_pred, beta=2)
+    print(f"f2: {f2:.4f}")
     print("ROC AUC:", roc_auc_score(y_test, y_prob))
 
     cm = confusion_matrix(y_test, y_pred)
