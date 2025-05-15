@@ -1,59 +1,58 @@
 
-# AI Stroke Risk Predictor
+# AI Stroke Risk Prediction Tool
 
-This project simulates a clinical decision support tool that uses machine learning to estimate stroke risk based on demographic and health-related features. It’s designed to demonstrate how interpretable AI can support proactive healthcare interventions.
+This project simulates a clinical decision support tool that uses machine learning to estimate stroke risk based on basic health profile inputs. It is designed to demonstrate how interpretable AI can support proactive healthcare decisions and early screening efforts.
 
 > **Disclaimer:** This tool is for educational purposes only. It is not approved for clinical use and must not be used for diagnosis or treatment. Always consult a healthcare provider for medical advice.
 
 ---
 
-## What It Does
+## 🔍 What It Does
 
-- Predicts stroke-like patient profiles using a trained ensemble model (Logistic Regression, Random Forest, XGBoost, KNN)
-- Accepts real-time patient inputs through a Streamlit web app
-- Returns probability score, color-coded severity feedback, and clear recommendations
-- Uses SHAP values for model explainability and transparency
-
----
-
-## Key Features
-
-- **Ensemble Modeling** – Combines multiple classifiers via soft voting for better performance
-- **One-Hot Encoded Features** – Ensures proper handling of categorical patient inputs
-- **Class Imbalance Handling** – Uses SMOTE to balance stroke vs. non-stroke cases
-- **Model Interpretability** – SHAP summary plots and waterfall explanations
-- **Streamlit Interface** – User-friendly web tool with sliders and dropdowns
+- Predicts stroke-like patterns using a trained ensemble model
+- Accepts real-time patient inputs via a Streamlit web app
+- Returns a probability score with clear visual feedback
+- Provides stroke-likeness interpretation and model transparency through SHAP
 
 ---
 
-## Model Highlights
+## 🔧 Key Features
 
-| Model                      | Precision | Recall | F1 Score | F2 Score | AUC-ROC |
-|---------------------------|-----------|--------|----------|----------|---------|
-| Logistic Regression (Bayes) | 0.113     | 0.780  | 0.197    | 0.358    | 0.814   |
-| Random Forest (Bayes)       | 0.116     | 0.660  | 0.198    | 0.341    | 0.796   |
-| XGBoost (Bayes)             | 0.168     | 0.520  | 0.254    | 0.366    | 0.791   |
-
-🧠 **Final Model:** XGBoost was selected for its high F2 score (0.366) and balanced precision-recall trade-off.
-
-Note: Probabilities rarely exceed 60% due to the class imbalance (~5% stroke cases). A prediction of 40–60% is still meaningful.
+- **Soft-Voting Ensemble** – Combines Logistic Regression, Random Forest, and XGBoost
+- **Bayesian Hyperparameter Tuning** – Uses BayesSearchCV for optimized model performance
+- **F2-Based Threshold Selection** – Prioritizes recall for early stroke detection
+- **SHAP Explainability** – Includes model summary plots and patient-level explanations
+- **Streamlit Interface** – Interactive web app with sliders and dropdowns
 
 ---
 
-## Sample Visual Insights & Interpretation
+## 📈 Final Model Performance
 
-### SHAP Value Summary – XGBoost
-![SHAP Summary](outputs/figures/shap_summary_xgb.png)
+| Model               | Precision | Recall | F1 Score | F2 Score | ROC AUC |
+|--------------------|-----------|--------|----------|----------|---------|
+| Logistic Regression | 0.113     | 0.780  | 0.197    | 0.358    | 0.814   |
+| Random Forest       | 0.116     | 0.660  | 0.198    | 0.341    | 0.796   |
+| XGBoost             | 0.168     | 0.520  | 0.254    | 0.366    | 0.791   |
+| **Voting Ensemble** | **0.149** | **0.680** | **0.244** | **0.397** | **0.823** |
+
+🧠 The ensemble model was selected for its **balanced performance and highest F2 score**, achieving **68% recall** and a precision of 14.9%.
+
+---
+
+## 🖼 Sample Visual Insights
+
+### SHAP Value Summary – Logistic Regression
+![SHAP Summary](outputs/figures/shap_summary_logreg.png)
 
 ### SHAP Waterfall – Single Prediction
-![Waterfall](outputs/figures/shap_waterfall_xgb.png)
+![Waterfall](outputs/figures/shap_waterfall_logreg.png)
 
-### Precision-Recall Curve
-![Precision-Recall](outputs/figures/precision_recall_curve_xgb.png)
+### Ensemble Learning Curve
+![Learning Curve](outputs/figures/ensemble_learning_curve_ensemble_v2.png)
 
 ---
 
-## Sample Code Snippet
+## 🧪 Sample Code Snippet
 
 ```python
 def make_prediction(model, input_df, column_order):
@@ -64,43 +63,33 @@ def make_prediction(model, input_df, column_order):
 
 ---
 
-## Run the App
+## 🚀 Try the App
 
-### Setup
-
-```bash
-git clone https://github.com/YOUR_USERNAME/stroke_risk_prediction_ml.git
-cd stroke_risk_prediction_ml
-pip install -r requirements.txt
-```
-
-### Launch App
-```bash
-streamlit run app_ui/app_stream.py
-```
+[Click here to launch the Streamlit app](https://aistrokerisktool.streamlit.app) _(opens in a new tab)_
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 .
 ├── app_ui/                  # Streamlit app frontend
-├── models/                  # Trained model and feature order
-├── src/                     # Preprocessing, training, evaluation
+├── models/                  # Trained model and column order
+├── src/                     # Preprocessing, training, evaluation modules
+├── outputs/figures/         # SHAP plots, learning curves, evaluation charts
 ├── requirements.txt
 ├── README.md
 ```
 
 ---
 
-## Author
+## 👨‍💻 Author
 
 John Paul Medina  
-🔗 [LinkedIn](https://linkedin.com/in/jpmedinacs) | 🌐 [jmedina.in](https://jmedina.in)  
+🔗 [LinkedIn](https://linkedin.com/in/jpmedinacs) | 🌐 [jmedina.in](https://jmedina.in)
 
 ---
 
-## License
+## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).

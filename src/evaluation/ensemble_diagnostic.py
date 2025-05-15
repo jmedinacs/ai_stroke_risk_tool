@@ -61,9 +61,9 @@ def plot_learning_curve(model, X_train, y_train, tag="ensemble"):
     plt.legend()
     plt.grid(True)
     os.makedirs("../../outputs/figures", exist_ok=True)
-    plt.savefig(f"../../outputs/figures/learning_curve_{tag}.png", dpi=300)
+    plt.savefig(f"../../outputs/figures/ensemble_learning_curve_{tag}.png", dpi=300)
     plt.show()
-    print(f"Saved learning curve: learning_curve_{tag}.png")
+    print(f"Saved learning curve: ensemble_learning_curve_{tag}.png")
 
 
 def plot_voting_agreement_pie(summary, tag="ensemble"):
@@ -167,9 +167,9 @@ def analyze_voting_agreement(ensemble, X_test, y_test, threshold=0.3):
             }])
         ], ignore_index=True)
 
-    print("\n📋 Google Sheets-style summary:")
+    print("\nSummary:")
     print(google_summary.to_string(index=False))
-    google_summary.to_csv("../../outputs/voting_agreement_google_style.csv", index=False)
+    google_summary.to_csv("../../outputs/voting_agreement_table.csv", index=False)
 
     return df, summary, google_summary
 
@@ -200,7 +200,7 @@ def run_ensemble_diagnostics():
     X_train = X_train[column_order]
     X_test = X_test[column_order]
 
-    tag = 'ensemble_v2'
+    tag = 'ensemble_v3'
     print(f"\nRunning diagnostics for: {tag}")
     plot_learning_curve(ensemble, X_train, y_train, tag)
 
