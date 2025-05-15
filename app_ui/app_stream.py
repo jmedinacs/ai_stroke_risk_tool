@@ -101,15 +101,21 @@ def display_result(prob):
     """
     st.subheader("Prediction Result")
     st.metric(label="Stroke-like Profile Probability", value=f"{prob * 100:.1f}%")
+    
+    # New explanation line
+    st.caption(f"🧠 Interpretation: This profile is {prob * 100:.1f}% similar to historical stroke cases in the training data.")
+    
+    # Progress bar
     st.progress(min(max(prob, 0.0), 1.0))
-
-    # Risk messaging based on thresholds
+    
+    # Risk-level messaging
     if prob > 0.7:
         st.error("⚠️ Very high stroke-like pattern. Recommend immediate medical consultation.")
     elif prob > 0.5:
         st.warning("⚠️ Elevated stroke-like pattern. Recommend medical screening.")
     else:
         st.success("✅ Pattern appears low-risk based on historical data.")
+
 
 
 def main():

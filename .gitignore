@@ -25,8 +25,8 @@ Thumbs.db
 
 # Model files and large outputs
 models/
-*.joblib
-*.pkl
+!/models/voting_ensemble.pkl
+!/models/column_order_logreg.json
 *.h5
 *.log
 
@@ -37,11 +37,10 @@ data/processed/
 *.xlsx
 
 # Secrets and credentials
-*.json
-*.key
-*.pem
 secrets/
 config.json
+*.key
+*.pem
 .env
 
 # Visualization images (optional)
