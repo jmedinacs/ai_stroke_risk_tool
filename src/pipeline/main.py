@@ -13,32 +13,53 @@ from pipeline.check_vif import preprocess_data_for_LR
 from evaluation.ensemble_diagnostic import run_ensemble_diagnostics
 
 def main():
-    """ """
-    # Initiate raw data cleaning steps
-    #df = clean_data()
-    # Initiate data preprocessing steps 
-    #df = preprocess_data()
-    # Conduct EDA process
-    #run_eda()
-    # Examine VIF for multicollinearity
+    """
+    Orchestrates the full end-to-end stroke risk prediction pipeline.
+
+    Steps:
+    1. Clean raw data and handle missing values
+    2. Preprocess features for machine learning (encoding, balancing)
+    3. Run exploratory data analysis (EDA)
+    4. Check multicollinearity using VIF
+    5. Train and evaluate:
+       - Logistic Regression (Bayes optimized)
+       - Random Forest (Bayes optimized)
+       - XGBoost (Bayes optimized)
+       - K-Nearest Neighbors (Bayes optimized)
+    6. Summarize model performance across all trained models
+    7. Build and tune ensemble soft-voting classifier
+    8. Run diagnostics and interpret ensemble predictions
+
+    Returns:
+        None
+    """
+    # 1. Clean raw data
+    df = clean_data()
+
+    # 2. Preprocess dataset (encoding, scaling, SMOTE, etc.)
+    df = preprocess_data()
+
+    # 3. Perform exploratory data analysis
+    run_eda()
+
+    # 4. Examine VIF for multicollinearity (specific to logistic regression)
     preprocess_data_for_LR()    
-    # Train Bayes Optimized Logistic Regression Model
-    #train_logistic_regression_model()
-    # Train Bayes Optimized Random Forest
-    #train_random_forest_model()
-    # Train Bayes Optimized XGBoost Model
-    #train_xgboost_model() 
-    # Train Bayes Optimized K-Nearest Neighbors Model
-    #train_knn_model()
-    # Compare the current acceptable models
+
+    # 5. Train models (Bayes-optimized)
+    train_logistic_regression_model()
+    train_random_forest_model()
+    train_xgboost_model()
+    train_knn_model()
+
+    # 6. Summarize model comparison and evaluation
     summarize_results()
-    # Initiate the ensemble soft voting model and tuning
-    run_voting_pipeline() 
-    # Test the ensemble and explain
+
+    # 7. Build and optimize soft-voting ensemble
+    run_voting_pipeline()
+
+    # 8. Evaluate ensemble agreement and SHAP diagnostics
     run_ensemble_diagnostics()
-    
-    
-    
+   
 
 if __name__ == '__main__':
     main()
