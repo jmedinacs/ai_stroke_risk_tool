@@ -24,7 +24,7 @@ def load_model():
     Load the trained ensemble model and column order used during training.
 
     Returns:
-        model: The loaded voting ensemble model.
+        model: The loaded voting ensemble model
         column_order (list): Ordered list of feature names used during training.
     """
     base_dir = Path(__file__).resolve().parent.parent
