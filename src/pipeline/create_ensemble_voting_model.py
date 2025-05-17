@@ -170,7 +170,7 @@ def run_voting_pipeline():
     X_test = X_test[column_order]
 
     print("\n🔎 Running grid search to find optimal voting weights...")
-    best_weights = optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf,0.4)
+    best_weights = optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf,0.35)
 
     if best_weights:
         ensemble = build_voting_classifier(logreg, rf)
@@ -184,14 +184,16 @@ def run_voting_pipeline():
         joblib.dump(ensemble, "../../models/voting_ensemble.pkl")
         print("Voting ensemble saved to /models/voting_ensemble.pkl")
         
+        # Save best threshold to JSON
+        with open("../../models/best_threshold_ensemble.json", "w") as f:
+            json.dump({"threshold": best_threshold}, f)
+        print("Best threshold saved to /models/best_threshold_ensemble.json")
+        
         # Save best weights to JSON
         with open("../../models/voting_weights.json", "w") as f:
             json.dump(list(best_weights), f)
         print("Voting weights saved to /models/voting_weights.json")
     
-    print("Ensemble Voting Classifier Details:")
-    print(ensemble)
-
 
 
 if __name__ == '__main__':

@@ -104,6 +104,7 @@ def analyze_voting_agreement(ensemble, X_test, y_test, threshold=0.3):
     - summary (Series): Agreement level counts
     - google_summary (DataFrame): Aggregated Google Sheets-style table
     """
+    print(threshold)
     estimators = dict(ensemble.named_estimators_)
     preds = {
         "logreg": (estimators['logreg'].predict_proba(X_test)[:, 1] >= threshold).astype(int),
@@ -184,6 +185,24 @@ def load_ensemble_and_columns():
         column_order = json.load(f)
     return ensemble, column_order
 
+def load_best_threshold(default=0.3):
+    """
+    Loads the best threshold from saved JSON. Returns default if file is missing.
+
+    Parameters:
+    - default (float): Default threshold to use if file is not found.
+
+    Returns:
+    - float: Classification threshold
+    """
+    try:
+        with open("../../models/best_threshold_ensemble.json") as f:
+            data = json.load(f)
+            return data.get("threshold", default)
+    except FileNotFoundError:
+        print(f"⚠️ Warning: best_threshold_ensemble.json not found. Using default threshold {default}")
+        return default
+
 
 def run_ensemble_diagnostics():
     """
@@ -201,7 +220,10 @@ def run_ensemble_diagnostics():
     print(f"\nRunning diagnostics for: {tag}")
     plot_learning_curve(ensemble, X_train, y_train, tag)
 
-    df_votes, agreement_summary, google_summary = analyze_voting_agreement(ensemble, X_test, y_test)
+    best_threshold = load_best_threshold(default=0.3)
+    df_votes, agreement_summary, google_summary = analyze_voting_agreement(
+        ensemble, X_test, y_test, threshold=best_threshold
+    )
     plot_voting_agreement_pie(agreement_summary, tag)
     df_votes.to_csv("../../outputs/voting_agreement_analysis.csv", index=False)
     print("Saved voting agreement analysis to /outputs/voting_agreement_analysis.csv")

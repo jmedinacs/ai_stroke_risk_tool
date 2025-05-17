@@ -17,6 +17,7 @@ from utils.data_io import load_clean_data
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
+from imblearn.combine import SMOTETomek
 from sklearn.preprocessing import StandardScaler
 import joblib
 
@@ -96,8 +97,9 @@ def apply_smote(X_train, y_train):
         Tuple[pd.DataFrame, pd.Series]: Resampled X_train and y_train with balanced classes.
     """
     # Initialize SMOTE
-    smote = SMOTE(random_state=42)
+    #smote = SMOTE(random_state=42)
     
+    smote = SMOTETomek(random_state=42)
     # Apply SMOTE to the TRAINING SET ONLY
     X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
     
