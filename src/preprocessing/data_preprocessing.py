@@ -20,7 +20,7 @@ from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import StandardScaler
 import joblib
 
-def drop_insignificant_features(df):
+def drop_insignificant_features(df, no_age=False):
     """
     Drops statistically insignificant features (based on EDA and chi-square tests)
 
@@ -31,8 +31,10 @@ def drop_insignificant_features(df):
     Returns:
         pd.DataFrame: DataFrame with dropped columns (id, gender, Residence_type).
     """
-    
-    df = df.drop(columns=["id","gender","Residence_type"])
+    if no_age:
+        df = df.drop(columns=["age","id","gender","Residence_type"])
+    else:
+        df = df.drop(columns=["id","gender","Residence_type"])
     return df
 
 def split_features_target(df):
@@ -59,6 +61,8 @@ def encode_categoricals(X):
     Returns:
         pd.DataFrame: One-hot encoded feature matrix.
     """
+    X["hypertension"] = X["hypertension"].astype("category")
+    X["heart_disease"] = X["heart_disease"].astype("category")
     X = pd.get_dummies(X, drop_first=True)
     return X  
 
@@ -101,7 +105,7 @@ def apply_smote(X_train, y_train):
 
 
 
-def preprocess_data():
+def preprocess_data(no_age=False):
     """
     Full preprocessing pipeline for stroke risk classification.
 
@@ -123,7 +127,7 @@ def preprocess_data():
     df = load_clean_data()
     
     # Drop identified insignificant figures
-    df = drop_insignificant_features(df)
+    df = drop_insignificant_features(df,no_age)
     
     # Separate the features from the target
     X, y = split_features_target(df)
@@ -139,7 +143,7 @@ def preprocess_data():
 
     return X_train_resampled, X_test, y_train_resampled, y_test
 
-def preprocess_data_knn():
+def preprocess_data_knn(no_age=False):
     """
     Preprocessing pipeline for KNN model:
     - Loads cleaned dataset
@@ -157,7 +161,7 @@ def preprocess_data_knn():
         scaler (StandardScaler): Fitted scaler for future use
     """
     df = load_clean_data()
-    df = drop_insignificant_features(df)
+    df = drop_insignificant_features(df,no_age)
     X, y = split_features_target(df)
     X = encode_categoricals(X)
     X_train, X_test, y_train, y_test = train_test_stratified_split(X, y)

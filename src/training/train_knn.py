@@ -28,7 +28,7 @@ import numpy as np
 import os
 
 
-def evaluate_knn_model(model, X_test, y_test, threshold=0.5):
+def evaluate_knn_model(model, X_test, y_test, threshold=0.5, tag="KNN"):
     """
     Evaluates the KNN model using classification metrics and a custom threshold.
 
@@ -57,7 +57,7 @@ def evaluate_knn_model(model, X_test, y_test, threshold=0.5):
     plt.tight_layout()
 
     os.makedirs("../../outputs/figures", exist_ok=True)
-    plt.savefig(f"../../outputs/figures/confusion_matrix_knn_thresh_{threshold}.png", dpi=300)
+    plt.savefig(f"../../outputs/figures/confusion_matrix_knn_thresh_{tag}.png", dpi=300)
     plt.show()
     plt.close()
 
@@ -101,14 +101,14 @@ def tune_model_bayes(X_train, y_train):
     return tuned_model
 
 
-def plot_precision_recall_curve(y_test, y_prob, model_name="KNN"):
+def plot_precision_recall_curve(y_test, y_prob, tag="KNN"):
     """
     Plots and saves a precision-recall curve for a given model.
 
     Parameters:
         y_test (array): True binary labels.
         y_prob (array): Predicted probabilities.
-        model_name (str): Model name used in titles and filenames.
+        tag (str): Model name used in titles and filenames.
 
     Saves:
         Precision-recall curve to /outputs/figures/.
@@ -120,33 +120,52 @@ def plot_precision_recall_curve(y_test, y_prob, model_name="KNN"):
     plt.plot(thresholds, recall[:-1], label="Recall", color="orange")
     plt.xlabel("Threshold")
     plt.ylabel("Score")
-    plt.title(f"Precision-Recall Tradeoff – {model_name}")
+    plt.title(f"Precision-Recall Tradeoff – {tag}")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
 
     os.makedirs("../../outputs/figures", exist_ok=True)
-    plt.savefig(f"../../outputs/figures/precision_recall_curve_{model_name.lower()}.png", dpi=300)
+    plt.savefig(f"../../outputs/figures/precision_recall_curve_tag{tag}.png", dpi=300)
     plt.show()
     plt.close()
 
 
-def train_knn_model():
+def train_knn_model(no_age=False):
     """
     Driver function for training and evaluating a KNN model:
-    - Loads and preprocesses data
+    - Loads and preprocesses data (optionally excluding 'age')
     - Tunes KNN with BayesSearchCV
     - Evaluates model with classification metrics and visualizations
     - Plots precision-recall curve
 
-    Returns:
-        None
+    Args:
+        no_age (bool): Whether to drop 'age' from features.
     """
-    X_train, X_test, y_train, y_test, scaler = preprocess_data_knn()
+    X_train, X_test, y_train, y_test, scaler = preprocess_data_knn(no_age)
+
+    # Train
     model = tune_model_bayes(X_train, y_train)
-    evaluate_knn_model(model, X_test, y_test, threshold=0.3)
+
+    # Set tag for filenames
+    tag = "knn_no_age" if no_age else "knn"
+
+    # Evaluate
+    evaluate_knn_model(model, X_test, y_test, threshold=0.3, tag=tag)
+
+    # PR Curve
     y_prob = model.predict_proba(X_test)[:, 1]
-    plot_precision_recall_curve(y_test, y_prob, model_name="KNN")
+    plot_precision_recall_curve(y_test, y_prob, tag)
+
+    # Optional: Save model + scaler
+    import joblib
+    os.makedirs("../../models", exist_ok=True)
+    joblib.dump(model, f"../../models/{tag}_bayes.pkl")
+    joblib.dump(scaler, f"../../models/scaler_{tag}.pkl")
+    print(f"Model and scaler saved for {tag}.")
+
+    
+    
 
 
 if __name__ == '__main__':

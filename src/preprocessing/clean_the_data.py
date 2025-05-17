@@ -128,6 +128,13 @@ def remove_duplicates(df):
     after_rows = df.shape[0]
     print(f"Removed {before_rows - after_rows} duplicate rows (excluding 'id').")
     return df
+
+def encode_binary(df):
+    """ """
+    df["hypertension"] = df["hypertension"].map({0: "no", 1: "yes"})
+    df["heart_disease"] = df["heart_disease"].map({0: "no", 1: "yes"})
+        
+    return df
     
 def clean_data():
     """
@@ -153,25 +160,29 @@ def clean_data():
     print("\nVerify that the BMI values have been imputed.")
     inspect_data(df)
     
-    print("\nStep 4: Inspect categorical features.")
+    print("\nStep 4: Convert numerical binary to text")
+    df = encode_binary(df)
+    
+    print("\nStep 5: Inspect categorical features.")
     inspect_categorical_distribution(df)
     
-    print("\nStep 5: Removing the single instance of 'other' gender")
+    print("\nStep 6: Removing the single instance of 'other' gender")
     df = remove_rare_gender(df)
     
-    print("\nStep 6: Standardizing text fields.")
+    print("\nStep 7: Standardizing text fields.")
     df = standardize_text_fields(df)
     
-    print("\nStep 7: Remove duplicates (ignore id)")
+    print("\nStep 8: Remove duplicates (ignore id)")
     df = remove_duplicates(df)
     
-    print("\nStep 8: Final check of data before saving as 'cleaned'.")
+    print("\nStep 9: Final check of data before saving as 'cleaned'.")
     inspect_data(df)
     
     print(f"Saving cleaned data")
     util.save_clean_data(df)
    
     return df
+
       
 if __name__ == '__main__':
     clean_data()

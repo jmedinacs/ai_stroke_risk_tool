@@ -24,6 +24,7 @@ from skopt import BayesSearchCV
 from skopt.space import Integer, Categorical
 from sklearn.metrics import make_scorer, fbeta_score
 from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import precision_recall_curve
 import numpy as np 
 import pandas as pd 
 import shap 
@@ -135,7 +136,7 @@ def explain_model_with_shap(model, X_test):
     print(shap_df.head(10).to_string(index=False))
     
     # Top 10 bar plot
-    top_n = 10
+    top_n = 13
     shap_df_top = shap_df.head(top_n)
     
     plt.figure(figsize=(8, 6))
@@ -158,9 +159,7 @@ def plot_precision_recall_curve(y_test, y_prob):
     """
     Plots the precision-recall curve to visualize trade-offs at different thresholds.
     """
-    from sklearn.metrics import precision_recall_curve
-    import matplotlib.pyplot as plt
-    import os
+
 
     precision, recall, thresholds = precision_recall_curve(y_test, y_prob)
 
