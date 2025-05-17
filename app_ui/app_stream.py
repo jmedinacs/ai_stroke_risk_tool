@@ -120,7 +120,7 @@ def display_age_progression(model, base_input, column_order):
     Show stroke probability progression across different ages 
     (keeping other features constant).
     """
-    st.subheader("📈 Age Progression Forecast")
+    st.subheader("Age Progression Forecast")
 
     age_range = [45, 55, 65, 75, 85, 95]
     results = []
