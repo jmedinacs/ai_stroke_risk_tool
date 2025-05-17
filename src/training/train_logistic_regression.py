@@ -221,7 +221,7 @@ def tune_logistic_regression_all_penalties(X_train, y_train, X_test, y_test, thr
     results = []
     
     for penalty in penalties:
-        print(f"\n Tuning Logirstic Regression with penalty = '{penalty}'")
+        print(f"\n Tuning Logistic Regression with penalty = '{penalty}'")
         
         search_space = {
             'C': Real(1e-3, 100.0, prior='log-uniform'),

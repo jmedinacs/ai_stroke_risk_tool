@@ -151,7 +151,7 @@ def train_knn_model(no_age=False):
     tag = "knn_no_age" if no_age else "knn"
 
     # Evaluate
-    evaluate_knn_model(model, X_test, y_test, threshold=0.3, tag=tag)
+    evaluate_knn_model(model, X_test, y_test, threshold=0.05, tag=tag)
 
     # PR Curve
     y_prob = model.predict_proba(X_test)[:, 1]

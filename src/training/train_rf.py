@@ -191,7 +191,7 @@ def tune_model_bayes(X_train, X_test, y_train, y_test):
     'min_samples_split': Integer(2, 20),
     'min_samples_leaf': Integer(1, 10),
     'max_features': Categorical(['sqrt', 'log2']),
-    'bootstrap': Categorical([True, False])
+    'bootstrap': Categorical([True,False])
     }
     
     # Initialize model

@@ -39,13 +39,13 @@ for col in column_order:
 
 # === Define Test Input ===
 input_1 = {
-    "age": 70,
+    "age": 42,
     "hypertension_yes": 1,
     "heart_disease_yes": 1,
     "ever_married": "yes",
     "work_type": "self-employed",
-    "avg_glucose_level": 110.0,
-    "bmi": 60.0,
+    "avg_glucose_level": 130.0,
+    "bmi": 36.0,
     "smoking_status": "smokes"
 }
 
