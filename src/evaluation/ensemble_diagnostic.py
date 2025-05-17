@@ -108,18 +108,16 @@ def analyze_voting_agreement(ensemble, X_test, y_test, threshold=0.3):
     preds = {
         "logreg": (estimators['logreg'].predict_proba(X_test)[:, 1] >= threshold).astype(int),
         "rf":     (estimators['rf'].predict_proba(X_test)[:, 1] >= threshold).astype(int),
-        "xgb":    (estimators['xgb'].predict_proba(X_test)[:, 1] >= threshold).astype(int),
         "ensemble": (ensemble.predict_proba(X_test)[:, 1] >= threshold).astype(int),
         "actual": y_test.values
     }
 
     df = pd.DataFrame(preds)
-    df['votes_for_stroke'] = df[['logreg', 'rf', 'xgb']].sum(axis=1)
+    df['votes_for_stroke'] = df[['logreg', 'rf']].sum(axis=1)
     df['agreement_level'] = df['votes_for_stroke'].map({
         0: "All predict no-stroke",
         1: "1 predicts stroke",
-        2: "2 predict stroke",
-        3: "All predict stroke"
+        2: "2 predict stroke"
     })
 
     summary = df['agreement_level'].value_counts().sort_index()
@@ -147,8 +145,7 @@ def analyze_voting_agreement(ensemble, X_test, y_test, threshold=0.3):
     label_map = {
         "1 predicts stroke": "1 Model Predict Stroke",
         "2 predict stroke": "2 Models Predict Stroke",
-        "All predict stroke": "All Models Predict Stroke",
-        "All predict no-stroke": "No Model Predicts Stroke"
+        "All predict stroke": "All Models Predict Stroke"
     }
 
     for level, row in grouped.iterrows():

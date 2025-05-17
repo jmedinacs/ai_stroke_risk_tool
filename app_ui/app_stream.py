@@ -48,8 +48,8 @@ def user_input_features():
 
     data = {
         "age": st.sidebar.slider("Age", 0, 100, 50, key="age"),
-        "hypertension": 1 if st.sidebar.selectbox("Hypertension", ["yes", "no"], key="hypertension") == "yes" else 0,
-        "heart_disease": 1 if st.sidebar.selectbox("Heart Disease", ["yes", "no"], key="heart_disease") == "yes" else 0,
+        "hypertension_yes": 1 if st.sidebar.selectbox("Hypertension", ["yes", "no"], key="hypertension") == "yes" else 0,
+        "heart_disease_yes": 1 if st.sidebar.selectbox("Heart Disease", ["yes", "no"], key="heart_disease") == "yes" else 0,
         "ever_married": st.sidebar.selectbox("Ever Married", ["yes", "no"], key="ever_married"),
         "work_type": st.sidebar.selectbox("Work Type", [
             "private", "self-employed", "govt_job", "children", "never_worked"

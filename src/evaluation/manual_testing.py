@@ -34,11 +34,14 @@ columns_path = base_dir / "models" / "column_order_logreg.json"
 model = joblib.load(model_path)
 column_order = pd.read_json(columns_path, typ='series').tolist()
 
+for col in column_order:
+    print(col)
+
 # === Define Test Input ===
 input_1 = {
-    "age": 42,
-    "hypertension": 1,
-    "heart_disease": 1,
+    "age": 70,
+    "hypertension_yes": 1,
+    "heart_disease_yes": 1,
     "ever_married": "yes",
     "work_type": "self-employed",
     "avg_glucose_level": 110.0,
@@ -47,8 +50,8 @@ input_1 = {
 }
 
 input_2 = input_1.copy()
-input_2["hypertension"] = 0
-input_2["heart_disease"] = 0
+input_2["hypertension_yes"] = 0
+input_2["heart_disease_yes"] = 0
 
 # === Predict for Input 1 ===
 df1 = pd.DataFrame([input_1])

@@ -32,23 +32,22 @@ import json
 def load_models_and_columns():
     logreg = joblib.load("../../models/logistic_regression_bayes.pkl")
     rf = joblib.load("../../models/random_forest_bayes.pkl")
-    xgb = joblib.load("../../models/xgboost_bayes.pkl")
+    
     
     with open("../../models/column_order_logreg.json") as f:
         column_order = json.load(f)
 
-    return logreg, rf, xgb, column_order
+    return logreg, rf, column_order
 
 
-def build_voting_classifier(logreg, rf, xgb):
+def build_voting_classifier(logreg, rf):
     ensemble = VotingClassifier(
         estimators=[
             ('logreg', logreg),
             ('rf', rf),
-            ('xgb', xgb)
         ],
         voting='soft',
-        weights=[3, 1, 3],  #Voting weight {}\\[LR,RF,XGB]
+        weights=[3,3],  
         n_jobs=-1
     )
     return ensemble
@@ -97,7 +96,7 @@ def find_best_threshold(model, X_test, y_test, beta=2):
     return best_t, best_f2
 
 
-def optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf, xgb, threshold=0.3):
+def optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf, threshold=0.3):
     """
     Performs a constrained grid search over voting weights for the ensemble model.
 
@@ -111,9 +110,9 @@ def optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf, xgb,
     results = []
 
     # Try all combinations of weights from 1 to 5
-    for weights in product(range(1, 6), repeat=3):  # (LR, RF, XGB)
+    for weights in product(range(1, 6), repeat=2):  # (LR, RF, XGB)
         ensemble = VotingClassifier(
-            estimators=[('logreg', logreg), ('rf', rf), ('xgb', xgb)],
+            estimators=[('logreg', logreg), ('rf', rf)],
             voting='soft',
             weights=weights,
             n_jobs=-1
@@ -148,8 +147,8 @@ def optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf, xgb,
 
 
 def run_voting_pipeline():
-    logreg, rf, xgb, column_order = load_models_and_columns()
-    ensemble = build_voting_classifier(logreg, rf, xgb)
+    logreg, rf, column_order = load_models_and_columns()
+    ensemble = build_voting_classifier(logreg, rf)
 
     X_train, X_test, y_train, y_test = preprocess_data()
     X_train = X_train[column_order]
@@ -165,10 +164,10 @@ def run_voting_pipeline():
     X_test = X_test[column_order]
 
     print("\n🔎 Running grid search to find optimal voting weights...")
-    best_weights = optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf, xgb)
+    best_weights = optimize_ensemble_weights(X_train, X_test, y_train, y_test, logreg, rf)
 
     if best_weights:
-        ensemble = build_voting_classifier(logreg, rf, xgb)
+        ensemble = build_voting_classifier(logreg, rf)
         ensemble.set_params(weights=best_weights)
         ensemble.fit(X_train, y_train)
         best_threshold, _ = find_best_threshold(ensemble, X_test, y_test)
