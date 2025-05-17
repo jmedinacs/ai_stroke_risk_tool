@@ -109,9 +109,9 @@ def display_result(prob):
     
     # Risk-level messaging
     if prob > 0.7:
-        st.error("Very high stroke-like pattern. Recommend immediate medical consultation.")
+        st.error("This profile shows a high similarity to individuals who previously experienced a stroke. Please consider speaking with a healthcare professional for further guidance.")
     elif prob > 0.5:
-        st.warning("Elevated stroke-like pattern. Recommend medical screening.")
+        st.warning("This pattern is elevated compared to typical non-stroke profiles. Consider a medical screening for additional insight.")
     else:
         st.success("Pattern appears low-risk based on historical data. Please see age progression below.")
 
