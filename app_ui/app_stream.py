@@ -113,7 +113,32 @@ def display_result(prob):
     elif prob > 0.5:
         st.warning("Elevated stroke-like pattern. Recommend medical screening.")
     else:
-        st.success("Pattern appears low-risk based on historical data.")
+        st.success("Pattern appears low-risk based on historical data. Please see age progression below.")
+
+def display_age_progression(model, base_input, column_order):
+    """
+    Show stroke probability progression across different ages 
+    (keeping other features constant).
+    """
+    st.subheader("📈 Age Progression Forecast")
+
+    age_range = [45, 55, 65, 75, 85, 95]
+    results = []
+
+    for age in age_range:
+        modified_input = base_input.copy()
+        modified_input["age"] = age
+        prob = make_prediction(model, modified_input, column_order)
+        results.append({"age": age, "probability": prob})
+
+    df_progression = pd.DataFrame(results)
+
+    st.line_chart(df_progression.set_index("age"))
+    st.caption("Prediction curve showing how stroke-like profile probability changes with age.")
+    st.caption(
+        "Note: This simulation assumes your health profile does not change with age, "
+        "which may not reflect real-world conditions. For educational use only."
+    )
 
 
 
@@ -139,6 +164,8 @@ def main():
     if col1.button("Predict Stroke Risk"):
         prob = make_prediction(model, input_df, column_order)
         display_result(prob)
+        display_age_progression(model, input_df, column_order)
+
 
     if col2.button("Reset"):
         # Clear all widget states and rerun the app

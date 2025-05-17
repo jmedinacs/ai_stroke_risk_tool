@@ -40,7 +40,7 @@ def summarize_results():
     X_train, X_test, y_train, y_test = preprocess_data()
 
     models_info = [
-        ("Logistic Regression (Bayes)", "../../models/logistic_regression_bayes.pkl", 0.3),
+        ("Logistic Regression (Bayes)", "../../models/logreg_bayes.pkl", 0.3),
         ("Random Forest (Bayes)", "../../models/random_forest_bayes.pkl", 0.3),
         ("XGBoost (Bayes)", "../../models/xgboost_bayes.pkl", 0.24)
     ]

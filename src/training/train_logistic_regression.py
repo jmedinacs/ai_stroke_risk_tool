@@ -348,7 +348,7 @@ def train_logistic_regression_model(train_manual=False):
     with open("../../models/column_order_logreg.json", "w") as f:
         json.dump(list(X_train.columns), f)
         
-    tune_logistic_regression_all_penalties(X_train, y_train, X_test, y_test)
+    #tune_logistic_regression_all_penalties(X_train, y_train, X_test, y_test)
 
 
     
