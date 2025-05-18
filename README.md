@@ -164,14 +164,10 @@ To maximize model performance, especially **recall**, which is critical in clini
 - A **custom grid search** was used to determine the threshold that maximized the **F2 score** on the validation set.
 - This step ensured each model was not only well-tuned but also **calibrated to the project’s goal**: minimizing false negatives while preserving practical precision.
 
-<details>
-<summary>📄 Logistic Regression Tuning Example (BayesSearchCV)</summary>
-
 ![BayesSearchCV Tuning for Logistic Regression](outputs/report_viz/bayes_search_ss.png)
 
-The function below uses `BayesSearchCV` to tune a Logistic Regression model using `F2` as the scoring metric. Search space includes regularization strength, penalty type, solver, and max iterations.
+*BayesSearchCV tuning function for Logistic Regression. The model was optimized for F2 score using a log-uniform search over regularization strength and categorical solvers.*
 
-</details>
 
 
 > **Note:** *Recall* is the model's ability to correctly identify true positive stroke cases.  
