@@ -51,6 +51,7 @@ config.json
 # Allow visual outputs in /outputs/figures/
 !outputs/figures/
 !outputs/figures/*.png
+!outputs/report_viz/*.png
 
 # Streamlit auto-generated cache
 .streamlit/
