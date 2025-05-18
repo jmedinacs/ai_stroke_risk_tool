@@ -147,7 +147,28 @@ This section details how candidate models were selected, tuned, evaluated, and c
 
 ---
 
-### 3. 🛠️ Hyperparameter and Threshold Tuning
+### 📊 Understanding the Evaluation Metrics
+
+To evaluate model performance, we used several classification metrics. In the context of stroke prediction, we prioritized **recall** and **F2 score** to minimize false negatives because *missing a stroke case is far more costly than a false alarms*.
+
+- **Precision**: Out of all patients predicted to have a stroke, how many actually did have a stroke?  
+  High precision = few false positives.
+
+- **Recall**: Out of all patients who actually had a stroke, how many did we catch?  
+  High recall = few false negatives.
+
+- **F1 Score**: The harmonic mean of precision and recall. A balanced metric when both precision and recall are treated as equally important.
+
+- **F2 Score**: Like F1, but gives more weight to **recall**.  
+  In this project, **F2 is our main metric**, because **identifying stroke cases is more important than avoiding false positives**.
+
+- **ROC AUC**: Measures the model’s ability to distinguish between stroke and no-stroke cases across all thresholds. Higher is better.
+
+> ⚠️ **Key takeaway:** We optimized for **F2** to reduce the risk of **missed stroke cases**, even if it means occasionally flagging a non-stroke patient for follow-up.
+
+---
+
+### 🛠️ Hyperparameter and Threshold Tuning
 
 To maximize model performance, especially **recall**, which is critical in clinical risk prediction, a **two-stage optimization process** was conducted:
 
@@ -168,9 +189,62 @@ To maximize model performance, especially **recall**, which is critical in clini
 
 *BayesSearchCV tuning function for Logistic Regression. The model was optimized for F2 score using a log-uniform search over regularization strength and categorical solvers.*
 
-
-
 > **Note:** *Recall* is the model's ability to correctly identify true positive stroke cases.  
+
+---
+
+### 🧠 Model Selection and Evaluation
+
+Four machine learning models were tained and evaluated using the same F2-optimized tuning and validation framework. Below is a brief summary of each model’s role and performance in the project.
+
+#### 🔍 Logistic Regression
+
+Logistic Regression is a linear classification algorithm that estimates the probability of a binary outcome (stroke vs. no stroke) based on input features. It applies a logistic (sigmoid) function to a weighted sum of the input variables, producing a probability between 0 and 1.
+
+Because this model is linear and interpretable, each feature’s coefficient (or SHAP value) can be directly examined to understand its direction and strength of influence. This transparency makes it especially valuable in healthcare, where understanding *why* a model made a prediction is just as important as the prediction itself.
+
+---
+
+**🧪 Confusion Matrix**  
+The matrix below shows how Logistic Regression performed on the test set. It correctly identified **34 out of 50 stroke cases**, achieving the **highest recall** among all models — a crucial outcome in a clinical screening context.
+
+![Confusion Matrix](outputs/report_viz/confusion_matrix_logreg_bayes.png)
+
+---
+
+**📊 Evaluation Metrics (All Models)**  
+This table compares the best-performing versions of all models across key metrics. Logistic Regression led in **recall** and **F2 score**, supporting its selection as the backbone of the final ensemble.
+
+![Evaluation Metrics(all models)](outputs/report_viz/performance_table_all_models.png)
+
+---
+
+**🧠 SHAP Summary (Logistic Regression)**  
+The SHAP summary plot highlights which features most strongly influenced stroke risk predictions. Top contributors included **age**, **average glucose level**, and **smoking history** ,which are in line with known medical risk factors.
+
+![SHAP Summary](outputs/report_viz/shap_summary_logreg_bayes.png)
+
+---
+
+**🔍 SHAP Waterfall: Individual Prediction Example**  
+This waterfall plot breaks down how the model evaluated a specific patient. Each feature's contribution (positive or negative) is shown, culminating in the final stroke risk score. This adds transparency and interpretability to individual-level predictions.
+
+![SHAP Waterfall - Sample 1](outputs/report_viz/shap_waterfall_logreg_bayes.png)
+
+---
+
+**📈 Precision-Recall Curve**  
+This curve illustrates the trade-off between precision and recall across different classification thresholds. It confirms that the model performs best with thresholds tuned specifically for **high recall**, which aligns with the clinical priority of minimizing false negatives.
+
+![Precision Recall Curve](outputs/report_viz/precision_recall_curve_logreg_bayes.png)
+
+
+> Logistic Regression achieved the **highest recall and F2 score**, making it the backbone of the final ensemble.
+
+- Interpretable coefficients
+- Strong SHAP explanations aligned with medical expectations
+
+
 ---
 
 ## 📂 Project Structure
