@@ -26,6 +26,12 @@ This project simulates a clinical decision support tool that uses machine learni
 
 ---
 
+## 🚀 Try the App
+
+[Click here to launch the Streamlit app](https://aistrokerisktool.streamlit.app)
+
+---
+
 ## 📈 Final Model Performance
 
 | Model               | Precision | Recall | F1 Score | F2 Score | ROC AUC |
@@ -63,9 +69,7 @@ def make_prediction(model, input_df, column_order):
 
 ---
 
-## 🚀 Try the App
 
-[Click here to launch the Streamlit app](https://aistrokerisktool.streamlit.app) _(opens in a new tab)_
 
 ---
 
