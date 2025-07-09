@@ -1,4 +1,4 @@
-#AI Stroke Risk Prediction Tool
+# AI Stroke Risk Prediction Tool
 
 This project simulates a clinical decision support system that estimates stroke risk using a machine learning ensemble. It was designed to demonstrate how **interpretable AI** can support early screening and proactive healthcare.
 
